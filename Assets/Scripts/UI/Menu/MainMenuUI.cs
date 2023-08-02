@@ -46,8 +46,6 @@ public class MainMenuUI : MonoBehaviour
     [SerializeField] Button profileEditPlayerNameBtn;
     [SerializeField] TMP_Text profilePlayerIdText;
     [SerializeField] Button profileBackBtn;
-    private int AvatarImageWidth => (int)profilePlayerImage.rectTransform.rect.width;
-    private int AvatarImageHeight => (int)profilePlayerImage.rectTransform.rect.height;
 
     #region login-Pannel
 
