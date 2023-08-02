@@ -33,6 +33,7 @@ public class PlayerMenu : MonoBehaviour, INetworkSerializeByMemcpy
 
     private void Start()
     {
+
         _saveLoadSystem = ReadonlySaveLoadSystemFactory.Instance.Get();
         SetupUI();
         SetupBetSliderStep();
@@ -45,8 +46,9 @@ public class PlayerMenu : MonoBehaviour, INetworkSerializeByMemcpy
         {
             playerData.SetDefaultValues();
         }
-        
-        PlayerAvatarData avatarData = _saveLoadSystem.Load<PlayerAvatarData>();
+
+        //PlayerAvatarData avatarData = _saveLoadSystem.Load<PlayerAvatarData>();
+        PlayerAvatarData avatarData = new PlayerAvatarData();
         if (avatarData.Equals(default(PlayerAvatarData)) == true)
         {
             avatarData.SetDefaultValues();
