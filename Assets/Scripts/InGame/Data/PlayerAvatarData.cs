@@ -19,7 +19,9 @@ public struct PlayerAvatarData : ISaveLoadData, INetworkSerializable
 
     public void SetDefaultValues()
     {
-        _codedValue = TextureConverter.GetRawTexture(Resources.Load<Sprite>("7/Layer 1").texture);
+        string imagePath = "UI/Poker game ui/Poker ui Slicing/7/Layer1";
+        Sprite sprite = Resources.Load<Sprite>(imagePath);
+        _codedValue = TextureConverter.GetRawTexture(sprite.texture);
     }
 
     public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
