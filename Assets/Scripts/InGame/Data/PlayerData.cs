@@ -11,7 +11,7 @@ public struct PlayerData : ISaveLoadData, INetworkSerializable
     public uint Stack => _stack;
     private uint _stack;
 
-    public PlayerData(string nickName, uint stack)
+    public PlayerData(string nickName, uint stack = 100)
     {
         _nickName = nickName;
         _stack = stack;

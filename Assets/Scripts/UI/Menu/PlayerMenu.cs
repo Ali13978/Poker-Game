@@ -47,8 +47,8 @@ public class PlayerMenu : MonoBehaviour, INetworkSerializeByMemcpy
             playerData.SetDefaultValues();
         }
 
-        //PlayerAvatarData avatarData = _saveLoadSystem.Load<PlayerAvatarData>();
-        PlayerAvatarData avatarData = new PlayerAvatarData();
+        PlayerAvatarData avatarData = _saveLoadSystem.Load<PlayerAvatarData>();
+        //PlayerAvatarData avatarData = new PlayerAvatarData();
         if (avatarData.Equals(default(PlayerAvatarData)) == true)
         {
             avatarData.SetDefaultValues();

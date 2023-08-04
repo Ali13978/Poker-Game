@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.IO;
 using System.Collections.Generic;
@@ -25,9 +26,13 @@ public class MainMenuUI : MonoBehaviour
     [SerializeField] TMP_InputField setNameInputField;
     [SerializeField] Button setNameDoneBtn;
 
+    [Header("Loading-Pannel")]
+    [SerializeField] GameObject loadingPannel;
+
     [Header("Mainmenu-Pannel")]
     [SerializeField] GameObject mainMenuPannel;
     [SerializeField] TMP_Text playerNameText;
+    [SerializeField] Image playerImage;
     [SerializeField] Button startGameBtn;
     [SerializeField] Button ProfileBtn;
 
@@ -38,6 +43,7 @@ public class MainMenuUI : MonoBehaviour
     [SerializeField] Button startGamePannelBackBtn;
 
     [Header("PlayerProfile-Pannel")]
+    private ISaveLoadSystem _saveLoadSystem;
     [SerializeField] GameObject playerProfilePannel;
     [SerializeField] Sprite defaultPlayerSprite;
     [SerializeField] Image profilePlayerImage;
@@ -66,7 +72,9 @@ public class MainMenuUI : MonoBehaviour
             yield return null;
         }
 
-        if (PlayerPrefs.HasKey("playerName"))
+        PlayerData playerData = _saveLoadSystem.Load<PlayerData>();
+
+        if (playerData.Equals(default(PlayerData)) == true)
             EnableMainMenuPannel();
         else
             EnableSetNamePannel();
@@ -114,9 +122,49 @@ public class MainMenuUI : MonoBehaviour
     }
     #endregion
 
+    #region Bytes to Texture
+    public static Texture2D BytesToTexture2D(byte[] byteArray)
+    {
+        Texture2D texture = new Texture2D(2, 2); // Create a new 2x2 texture, we'll replace it with the decoded image.
+
+        if (byteArray != null && byteArray.Length > 0)
+        {
+            // Load the image data into the texture
+            bool success = ImageConversion.LoadImage(texture, byteArray);
+
+            if (!success)
+            {
+                Debug.LogError("Failed to convert byte array to Texture2D.");
+                return null;
+            }
+        }
+
+        return texture;
+    }
+
+    public static Sprite BytesToSprite(byte[] byteArray)
+    {
+        Texture2D texture = BytesToTexture2D(byteArray);
+
+        if (texture != null)
+        {
+            // Create a sprite using the texture
+            Sprite sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
+
+            return sprite;
+        }
+        else
+        {
+            Debug.LogError("Failed to convert byte array to Sprite.");
+            return null;
+        }
+    }
+    #endregion
+
     private async void Start()
     {
         await UnityServices.InitializeAsync();
+        _saveLoadSystem = ReadonlySaveLoadSystemFactory.Instance.Get();
 
         //Login Pannel
         TurnOffAllPannels();
@@ -141,7 +189,16 @@ public class MainMenuUI : MonoBehaviour
 
         createRoomBtn.onClick.AddListener(() =>
         {
-            NetworkConnectorHandler.CreateGame(NetworkConnectorType.UnityRelay);
+            try
+            {
+                EnableLoadingPannel();
+                NetworkConnectorHandler.CreateGame(NetworkConnectorType.UnityRelay);
+            }
+            catch (Exception e)
+            {
+                EnableMainMenuPannel();
+                Debug.Log(e);
+            }
         });
 
         joinRoomBtn.onClick.AddListener(() =>
@@ -155,18 +212,32 @@ public class MainMenuUI : MonoBehaviour
             Debug.Log(setNameInputField.text);
             if (string.IsNullOrEmpty(setNameInputField.text))
                 return;
-            PlayerPrefs.SetString("playerName", setNameInputField.text);
-            EnableMainMenuPannel();
+        PlayerPrefs.SetString("playerName", setNameInputField.text);
+        PlayerData playerData = new (setNameInputField.text);
+        _saveLoadSystem.Save(playerData);
+        EnableMainMenuPannel();
         });
 
         //Player Profile Pannel
-        profileEditPlayerNameBtn.onClick.AddListener(() =>
-        {
+        profileEditPlayerNameBtn.onClick.AddListener(() =>{
+
             EnableSetNamePannel();
         });
 
-        profileBackBtn.onClick.AddListener(() =>
-        {
+        profileEditImageBtn.onClick.AddListener(() => {
+            Sprite sprite = OpenImage();
+            if (sprite == null)
+                return;
+
+            byte[] rawTexture = TextureConverter.GetRawTexture(sprite.texture);
+            PlayerAvatarData avatarData = new (rawTexture);
+
+            _saveLoadSystem.Save(avatarData);
+            EnableMainMenuPannel();
+        });
+
+        profileBackBtn.onClick.AddListener(() => {
+
             EnableMainMenuPannel();
         });
     }
@@ -174,6 +245,7 @@ public class MainMenuUI : MonoBehaviour
     private void TurnOffAllPannels()
     {
         loginPannel.SetActive(false);
+        loadingPannel.SetActive(false);
         mainMenuPannel.SetActive(false);
         setNamePannel.SetActive(false);
         playerProfilePannel.SetActive(false);
@@ -183,7 +255,11 @@ public class MainMenuUI : MonoBehaviour
     {
         TurnOffAllPannels();
         mainMenuPannel.SetActive(true);
-        playerNameText.text = PlayerPrefs.GetString("playerName");
+        PlayerData playerData = _saveLoadSystem.Load<PlayerData>();
+        PlayerAvatarData playerAvatarData = _saveLoadSystem.Load<PlayerAvatarData>();
+
+        playerImage.sprite = BytesToSprite(playerAvatarData.CodedValue);
+        playerNameText.text = playerData.NickName;
     }
 
     private void EnableSetNamePannel()
@@ -191,14 +267,23 @@ public class MainMenuUI : MonoBehaviour
         TurnOffAllPannels();
         setNamePannel.SetActive(true);
     }
+    private void EnableLoadingPannel()
+    {
+        TurnOffAllPannels();
+        loadingPannel.SetActive(true);
+    }
 
     private void EnablePlayerProfilePannel()
     {
         TurnOffAllPannels();
         playerProfilePannel.SetActive(true);
 
-        profilePlayerNameText.text = "Player Name: " + PlayerPrefs.GetString("playerName");
+        PlayerData playerData = _saveLoadSystem.Load<PlayerData>();
+        PlayerAvatarData playerAvatarData = _saveLoadSystem.Load<PlayerAvatarData>();
+
+        profilePlayerNameText.text = "Player Name: " + playerData.NickName;
         profilePlayerIdText.text = "Player Id: " + AuthenticationService.Instance.PlayerId;
+        profilePlayerImage.sprite = BytesToSprite(playerAvatarData.CodedValue);
 
         Debug.Log(AuthenticationService.Instance.PlayerInfo);
     }
