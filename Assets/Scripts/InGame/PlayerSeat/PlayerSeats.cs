@@ -14,7 +14,7 @@ public class PlayerSeats : MonoBehaviour
     
     public static PlayerSeats Instance { get; private set; }
 
-    public const int MaxSeats = 5;
+    public const int MaxSeats = 9;
 
     public event Action<Player, int> PlayerSitEvent;
     public event Action<Player, int> PlayerWaitForSitEvent;

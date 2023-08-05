@@ -6,7 +6,14 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using Unity.Services.Authentication;
+using Unity.Services.Relay;
+using Unity.Services.Relay.Http;
 using Unity.Services.Core;
+using SFB;
+#if UNITY_ANDROID || UNITY_IOS
+using NativeFilePickerNamespace;
+#endif
+
 public class MainMenuUI : MonoBehaviour
 {
     #region Singleton
@@ -40,6 +47,7 @@ public class MainMenuUI : MonoBehaviour
     [SerializeField] GameObject startGamePannel;
     [SerializeField] Button createRoomBtn;
     [SerializeField] Button joinRoomBtn;
+    [SerializeField] TMP_InputField joinCodeInput;
     [SerializeField] Button startGamePannelBackBtn;
 
     [Header("PlayerProfile-Pannel")]
@@ -83,44 +91,63 @@ public class MainMenuUI : MonoBehaviour
 
     #region OpenImage
 
-    private Sprite OpenImage()
+    public Sprite OpenImage()
     {
-#if UNITY_ANDROID
-        // On Android, use native file picker to get the image path
-        AndroidJavaClass unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
-        AndroidJavaObject currentActivity = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity");
-        AndroidJavaObject context = currentActivity.Call<AndroidJavaObject>("getApplicationContext");
+        // Set the filters for allowed file extensions
+        ExtensionFilter[] extensions = new ExtensionFilter[]
+        {
+            new ExtensionFilter("Image Files", "png", "jpg", "jpeg"),
+        };
 
-        // Create an intent for file selection
-        AndroidJavaObject intent = new AndroidJavaObject("android.content.Intent");
-        intent.Call<AndroidJavaObject>("setType", "image/*");
-        intent.Call<AndroidJavaObject>("setAction", "android.intent.action.GET_CONTENT");
-
-        // Start the file picker activity and wait for result
-        AndroidJavaObject chooser = intent.CallStatic<AndroidJavaObject>("createChooser", intent, "Select Image");
-        AndroidJavaObject uri = currentActivity.Call<AndroidJavaObject>("startActivityForResult", chooser, 1);
-
-        // Convert the selected image URI to a string
-        string imagePath = uri.Call<string>("toString");
+#if UNITY_ANDROID && !UNITY_EDITOR
+        string[] paths = new string[1];
+        NativeFilePicker.Permission permission = NativeFilePicker.PickFile((path) =>
+        {
+            if (path == null)
+                Debug.Log("Operation cancelled");
+            else
+            {
+                paths[0] = path;
+                Debug.Log("Picked file: " + path);
+            }
+        }, new string[] { "image/*" });
+        Debug.Log(paths[0]);
 #else
-        // On other platforms, use Unity's built-in file dialog
-        string imagePath = UnityEditor.EditorUtility.OpenFilePanel("Select Image", "", "png,jpg,jpeg");
+        // On other platforms, use the default standalone file browser
+        //string[] paths = new string[1];
+        string[] paths = StandaloneFileBrowser.OpenFilePanel("Select Profile Photo", "C:/", extensions, false);
+        //NativeFilePicker.Permission permission = NativeFilePicker.PickFile((path) =>
+        //{
+        //    if (path == null)
+        //        Debug.Log("Operation cancelled");
+        //    else
+        //    {
+        //        paths[0] = path;
+        //        Debug.Log("Picked file: " + path);
+        //    }
+        //}, new string[] { "image/*" });
+        //Debug.Log(paths[0]);
 #endif
 
-        // Load the image at the selected path as a Texture2D
-        if (!string.IsNullOrEmpty(imagePath))
+        // Check if a file was selected
+        if (!string.IsNullOrEmpty(paths[0]))
         {
-            byte[] imageBytes = File.ReadAllBytes(imagePath);
-            Texture2D texture = new Texture2D(2, 2);
-            texture.LoadImage(imageBytes);
+            // Load the selected image file as a byte array
+            byte[] imageData = File.ReadAllBytes(paths[0]);
 
-            Sprite sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
+            // Create a new texture from the image data
+            Texture2D texture = new Texture2D(2, 2);
+            texture.LoadImage(imageData);
+
+            // Convert the texture to a Sprite
+            Sprite sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), Vector2.one * 0.5f);
+
             return sprite;
         }
 
-        return defaultPlayerSprite;
+        return defaultPlayerSprite; // Return null if no image was selected
     }
-    #endregion
+#endregion
 
     #region Bytes to Texture
     public static Texture2D BytesToTexture2D(byte[] byteArray)
@@ -159,7 +186,7 @@ public class MainMenuUI : MonoBehaviour
             return null;
         }
     }
-    #endregion
+#endregion
 
     private async void Start()
     {
@@ -194,7 +221,7 @@ public class MainMenuUI : MonoBehaviour
                 EnableLoadingPannel();
                 NetworkConnectorHandler.CreateGame(NetworkConnectorType.UnityRelay);
             }
-            catch (Exception e)
+            catch (RelayServiceException e)
             {
                 EnableMainMenuPannel();
                 Debug.Log(e);
@@ -203,7 +230,19 @@ public class MainMenuUI : MonoBehaviour
 
         joinRoomBtn.onClick.AddListener(() =>
         {
-            NetworkConnectorHandler.JoinGame(NetworkConnectorType.UnityRelay);
+            try
+            {
+                if (string.IsNullOrEmpty(joinCodeInput.text))
+                    return;
+                EnableLoadingPannel();
+                startGamePannel.SetActive(false);
+                NetworkConnectorHandler.JoinGame(NetworkConnectorType.UnityRelay);
+            }
+            catch(RelayServiceException e)
+            {
+                EnableMainMenuPannel();
+                Debug.Log(e);
+            }
         });
 
         //Set Name Pannel
@@ -213,7 +252,7 @@ public class MainMenuUI : MonoBehaviour
             if (string.IsNullOrEmpty(setNameInputField.text))
                 return;
         PlayerPrefs.SetString("playerName", setNameInputField.text);
-        PlayerData playerData = new (setNameInputField.text);
+            PlayerData playerData = new (setNameInputField.text);
         _saveLoadSystem.Save(playerData);
         EnableMainMenuPannel();
         });
