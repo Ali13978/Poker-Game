@@ -219,6 +219,8 @@ public class MainMenuUI : MonoBehaviour
             try
             {
                 EnableLoadingPannel();
+                startGamePannel.SetActive(false);
+
                 NetworkConnectorHandler.CreateGame(NetworkConnectorType.UnityRelay);
             }
             catch (RelayServiceException e)
