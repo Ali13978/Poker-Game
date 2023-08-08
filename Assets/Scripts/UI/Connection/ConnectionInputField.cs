@@ -30,12 +30,12 @@ public class ConnectionInputField : MonoBehaviour
             .ToString();
     }
 
-    public IReadOnlyList<string> GetConnectionData(NetworkConnectorType connectorType)
+    public IReadOnlyList<string> GetConnectionData(NetworkConnectorType connectorType, string _relayCode)
     {
         return connectorType switch
         {
             NetworkConnectorType.LocalAddress => new[] { _ipAddressInputField.text, _portInputField.text },
-            NetworkConnectorType.UnityRelay => new[] { _joinCodeInputField.text },
+            NetworkConnectorType.UnityRelay => new[] { _relayCode },
             _ => throw new ArgumentOutOfRangeException(nameof(connectorType), connectorType, null)
         };
     }

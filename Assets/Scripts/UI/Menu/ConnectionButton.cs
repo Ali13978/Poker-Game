@@ -14,8 +14,8 @@ public class ConnectionButton : MonoBehaviour
     }
 
     // Button.
-    private void JoinGame()
+    private void JoinGame(string _relayCode)
     {
-        NetworkConnectorHandler.JoinGame(_connectorType);
+        NetworkConnectorHandler.JoinGame(_connectorType, _relayCode);
     }
 }

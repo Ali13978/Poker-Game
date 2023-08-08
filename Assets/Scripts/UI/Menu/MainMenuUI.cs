@@ -24,6 +24,18 @@ public class MainMenuUI : MonoBehaviour
     }
     #endregion
 
+    private enum PanelType
+    {
+        loginPannel,
+        setNamePannel,
+        loadingPannel,
+        mainMenuPannel,
+        playerProfilePannel,
+        lobbyPannel
+    };
+
+    private Dictionary<PanelType, GameObject> panelsDictionary;
+
     [Header("Login-Pannel")]
     [SerializeField] GameObject loginPannel;
     [SerializeField] Slider loginSlider;
@@ -41,7 +53,9 @@ public class MainMenuUI : MonoBehaviour
     [SerializeField] TMP_Text playerNameText;
     [SerializeField] Image playerImage;
     [SerializeField] Button startGameBtn;
+    [SerializeField] Button quickJoinBtn;
     [SerializeField] Button ProfileBtn;
+    private Action enableMainMenuAction;
 
     [Header("StartGame-Pannel")]
     [SerializeField] GameObject startGamePannel;
@@ -60,6 +74,19 @@ public class MainMenuUI : MonoBehaviour
     [SerializeField] Button profileEditPlayerNameBtn;
     [SerializeField] TMP_Text profilePlayerIdText;
     [SerializeField] Button profileBackBtn;
+    private Action enablePlayerProfilePannelAction;
+
+    [Header("Lobby-Pannel")]
+    [SerializeField] GameObject lobbyPannel;
+    [SerializeField] GameObject PlayerInLobbyPrefab;
+    [SerializeField] TMP_Text lobbyCodeText;
+    [SerializeField] Transform lobbyPlayersHolder;
+    [SerializeField] Button lobbyStartGameBtn;
+    [SerializeField] Button lobbyLeaveBtn;
+    public Action lobbyPlayersEditedAction;
+    private Action enableLobbyPannelAction;
+    public Action<string> joinRelayAction;
+    string relayCode = null;
 
     #region login-Pannel
 
@@ -83,15 +110,15 @@ public class MainMenuUI : MonoBehaviour
         PlayerData playerData = _saveLoadSystem.Load<PlayerData>();
 
         if (playerData.Equals(default(PlayerData)) == true)
-            EnableMainMenuPannel();
+            EnablePannel(PanelType.mainMenuPannel, enableMainMenuAction);
         else
-            EnableSetNamePannel();
+            EnablePannel(PanelType.setNamePannel, ()=> { });
     }
     #endregion
 
     #region OpenImage
 
-    public Sprite OpenImage()
+    private Sprite OpenImage()
     {
         // Set the filters for allowed file extensions
         ExtensionFilter[] extensions = new ExtensionFilter[]
@@ -150,7 +177,7 @@ public class MainMenuUI : MonoBehaviour
 #endregion
 
     #region Bytes to Texture
-    public static Texture2D BytesToTexture2D(byte[] byteArray)
+    private static Texture2D BytesToTexture2D(byte[] byteArray)
     {
         Texture2D texture = new Texture2D(2, 2); // Create a new 2x2 texture, we'll replace it with the decoded image.
 
@@ -169,7 +196,7 @@ public class MainMenuUI : MonoBehaviour
         return texture;
     }
 
-    public static Sprite BytesToSprite(byte[] byteArray)
+    private static Sprite BytesToSprite(byte[] byteArray)
     {
         Texture2D texture = BytesToTexture2D(byteArray);
 
@@ -190,12 +217,24 @@ public class MainMenuUI : MonoBehaviour
 
     private async void Start()
     {
+        panelsDictionary = new Dictionary<PanelType, GameObject>
+        {
+            { PanelType.loginPannel, loginPannel },
+            { PanelType.setNamePannel, setNamePannel },
+            { PanelType.loadingPannel, loadingPannel },
+            { PanelType.mainMenuPannel, mainMenuPannel },
+            { PanelType.playerProfilePannel, playerProfilePannel },
+            { PanelType.lobbyPannel, lobbyPannel }
+        };
+
         await UnityServices.InitializeAsync();
         _saveLoadSystem = ReadonlySaveLoadSystemFactory.Instance.Get();
 
+        //Initializing All Actions
+        InitializeActions();
+
         //Login Pannel
-        TurnOffAllPannels();
-        loginPannel.SetActive(true);
+        EnablePannel(PanelType.loginPannel, () => { });
 
         //Main Menu Pannel
         startGameBtn.onClick.AddListener(() =>
@@ -203,9 +242,19 @@ public class MainMenuUI : MonoBehaviour
             startGamePannel.SetActive(true);
         });
 
+        quickJoinBtn.onClick.AddListener(() => {
+            EnablePannel(PanelType.loadingPannel, () => { });
+
+            LobbyManager.instance.QuickJoinLobby(() => {
+                EnablePannel(PanelType.lobbyPannel, enableLobbyPannelAction);
+            }, () => {
+                EnablePannel(PanelType.mainMenuPannel, enableMainMenuAction);
+            });
+        });
+
         ProfileBtn.onClick.AddListener(() =>
         {
-            EnablePlayerProfilePannel();
+            EnablePannel(PanelType.playerProfilePannel, enablePlayerProfilePannelAction);
         });
 
         //Start Game Pannel
@@ -216,35 +265,57 @@ public class MainMenuUI : MonoBehaviour
 
         createRoomBtn.onClick.AddListener(() =>
         {
-            try
-            {
-                EnableLoadingPannel();
-                startGamePannel.SetActive(false);
+            //try
+            //{
+            //    EnablePannel(PanelType.loadingPannel, () => { });
+            //    startGamePannel.SetActive(false);
 
-                NetworkConnectorHandler.CreateGame(NetworkConnectorType.UnityRelay);
-            }
-            catch (RelayServiceException e)
-            {
-                EnableMainMenuPannel();
-                Debug.Log(e);
-            }
+            //    NetworkConnectorHandler.CreateGame(NetworkConnectorType.UnityRelay);
+            //}
+            //catch (RelayServiceException e)
+            //{
+            //    EnablePannel(PanelType.mainMenuPannel, enableMainMenuAction);
+            //    Debug.Log(e);
+            //}
+
+
+            EnablePannel(PanelType.loadingPannel, () => { });
+            startGamePannel.SetActive(false);
+
+            LobbyManager.instance.CreateLobby(true, () => {
+                EnablePannel(PanelType.lobbyPannel, enableLobbyPannelAction);
+            }, () => {
+                EnablePannel(PanelType.mainMenuPannel, enableMainMenuAction);
+            });
         });
 
         joinRoomBtn.onClick.AddListener(() =>
         {
-            try
-            {
-                if (string.IsNullOrEmpty(joinCodeInput.text))
-                    return;
-                EnableLoadingPannel();
-                startGamePannel.SetActive(false);
-                NetworkConnectorHandler.JoinGame(NetworkConnectorType.UnityRelay);
-            }
-            catch(RelayServiceException e)
-            {
-                EnableMainMenuPannel();
-                Debug.Log(e);
-            }
+            //try
+            //{
+            //    if (string.IsNullOrEmpty(joinCodeInput.text))
+            //        return;
+            //        EnablePannel(PanelType.loadingPannel, () => { });
+            //        startGamePannel.SetActive(false);
+            //        NetworkConnectorHandler.JoinGame(NetworkConnectorType.UnityRelay);
+            //    }
+            //    catch(RelayServiceException e)
+            //    {
+            //        EnablePannel(PanelType.mainMenuPannel, enableMainMenuAction);
+            //        Debug.Log(e);
+            //    }
+
+            if (string.IsNullOrEmpty(joinCodeInput.text))
+                return;
+
+            EnablePannel(PanelType.loadingPannel, () => { });
+            startGamePannel.SetActive(false);
+
+            LobbyManager.instance.JoinLobby(joinCodeInput.text, () => {
+                EnablePannel(PanelType.lobbyPannel, enableLobbyPannelAction);
+            }, () => {
+                EnablePannel(PanelType.mainMenuPannel, enableMainMenuAction);
+            });
         });
 
         //Set Name Pannel
@@ -253,16 +324,17 @@ public class MainMenuUI : MonoBehaviour
             Debug.Log(setNameInputField.text);
             if (string.IsNullOrEmpty(setNameInputField.text))
                 return;
-        PlayerPrefs.SetString("playerName", setNameInputField.text);
+            PlayerPrefs.SetString("playerName", setNameInputField.text);
             PlayerData playerData = new (setNameInputField.text);
-        _saveLoadSystem.Save(playerData);
-        EnableMainMenuPannel();
+            _saveLoadSystem.Save(playerData);
+
+            EnablePannel(PanelType.mainMenuPannel, enableMainMenuAction);
         });
 
         //Player Profile Pannel
         profileEditPlayerNameBtn.onClick.AddListener(() =>{
 
-            EnableSetNamePannel();
+            EnablePannel(PanelType.setNamePannel, () => { });
         });
 
         profileEditImageBtn.onClick.AddListener(() => {
@@ -274,13 +346,124 @@ public class MainMenuUI : MonoBehaviour
             PlayerAvatarData avatarData = new (rawTexture);
 
             _saveLoadSystem.Save(avatarData);
-            EnableMainMenuPannel();
+            EnablePannel(PanelType.mainMenuPannel, enableMainMenuAction);
         });
 
         profileBackBtn.onClick.AddListener(() => {
 
-            EnableMainMenuPannel();
+            EnablePannel(PanelType.mainMenuPannel, enableMainMenuAction);
         });
+
+        //Lobby Pannel
+
+        lobbyStartGameBtn.onClick.AddListener(() => {
+            Debug.Log("Game Started");
+            try
+            {
+                EnablePannel(PanelType.loadingPannel, () => { });
+                startGamePannel.SetActive(false);
+
+                NetworkConnectorHandler.CreateGame(NetworkConnectorType.UnityRelay);
+            }
+            catch (RelayServiceException e)
+            {
+                EnablePannel(PanelType.mainMenuPannel, enableMainMenuAction);
+                Debug.Log(e);
+            }
+        });
+
+
+        lobbyLeaveBtn.onClick.AddListener(() => {
+            EnablePannel(PanelType.loadingPannel, () => { });
+
+            LobbyManager.instance.LeaveLobby(() => {
+                EnablePannel(PanelType.mainMenuPannel, enableMainMenuAction);
+            }, () => {
+                EnablePannel(PanelType.lobbyPannel, enableLobbyPannelAction);
+            });
+        });
+    }
+
+    private void InitializeActions()
+    {
+        enableMainMenuAction = () => {
+            PlayerData playerData = _saveLoadSystem.Load<PlayerData>();
+            PlayerAvatarData playerAvatarData = _saveLoadSystem.Load<PlayerAvatarData>();
+
+            playerImage.sprite = BytesToSprite(playerAvatarData.CodedValue);
+            playerNameText.text = playerData.NickName;
+        };
+
+        enablePlayerProfilePannelAction = () => {
+
+            PlayerData playerData = _saveLoadSystem.Load<PlayerData>();
+            PlayerAvatarData playerAvatarData = _saveLoadSystem.Load<PlayerAvatarData>();
+
+            profilePlayerNameText.text = "Player Name: " + playerData.NickName;
+            profilePlayerIdText.text = "Player Id: " + AuthenticationService.Instance.PlayerId;
+            profilePlayerImage.sprite = BytesToSprite(playerAvatarData.CodedValue);
+
+            Debug.Log(AuthenticationService.Instance.PlayerInfo);
+        };
+
+        enableLobbyPannelAction = () => {
+            lobbyCodeText.text = LobbyManager.instance.GetLobbyCode();
+
+            if (LobbyManager.instance.IsHost())
+                lobbyStartGameBtn.gameObject.SetActive(true);
+            else
+                lobbyStartGameBtn.gameObject.SetActive(false);
+        };
+
+        lobbyPlayersEditedAction = () => {
+
+            int childCount = lobbyPlayersHolder.childCount;
+            for (int i = childCount - 1; i >= 0; i--)
+            {
+                Transform child = lobbyPlayersHolder.GetChild(i);
+                Destroy(child.gameObject);
+            }
+
+            int currentPlayersInLobby =  LobbyManager.instance.GetJoinedLobby().Players.Count;
+
+            for (int i = 0; i < currentPlayersInLobby; i++)
+            {
+                Unity.Services.Lobbies.Models.Player Player = LobbyManager.instance.GetJoinedLobby().Players[i];
+                GameObject player = Instantiate(PlayerInLobbyPrefab, lobbyPlayersHolder.transform);
+                PlayerInRoom _player = player.GetComponent<PlayerInRoom>();
+
+                string playerName = Player.Data["PlayerName"].Value;
+
+                _player.UpdatePlayerUI(playerName);
+                
+            }
+
+            if (LobbyManager.instance.IsHost())
+                lobbyStartGameBtn.gameObject.SetActive(true);
+            else
+                lobbyStartGameBtn.gameObject.SetActive(false);
+        };
+
+        joinRelayAction = (newRelayCode) => {
+            try
+            {
+                if (relayCode == newRelayCode)
+                    return;
+
+                relayCode = newRelayCode;
+
+                if (string.IsNullOrEmpty(relayCode))
+                    return;
+
+                EnablePannel(PanelType.loadingPannel, () => { });
+                NetworkConnectorHandler.JoinGame(NetworkConnectorType.UnityRelay, relayCode);
+            }
+            catch (RelayServiceException e)
+            {
+                EnablePannel(PanelType.mainMenuPannel, enableMainMenuAction);
+                Debug.Log(e);
+            }
+        };
     }
 
     private void TurnOffAllPannels()
@@ -290,42 +473,21 @@ public class MainMenuUI : MonoBehaviour
         mainMenuPannel.SetActive(false);
         setNamePannel.SetActive(false);
         playerProfilePannel.SetActive(false);
+        lobbyPannel.SetActive(false);
     }
 
-    private void EnableMainMenuPannel()
+    private void EnablePannel(PanelType pannel, Action onEnableAction)
     {
-        TurnOffAllPannels();
-        mainMenuPannel.SetActive(true);
-        PlayerData playerData = _saveLoadSystem.Load<PlayerData>();
-        PlayerAvatarData playerAvatarData = _saveLoadSystem.Load<PlayerAvatarData>();
-
-        playerImage.sprite = BytesToSprite(playerAvatarData.CodedValue);
-        playerNameText.text = playerData.NickName;
-    }
-
-    private void EnableSetNamePannel()
-    {
-        TurnOffAllPannels();
-        setNamePannel.SetActive(true);
-    }
-    private void EnableLoadingPannel()
-    {
-        TurnOffAllPannels();
-        loadingPannel.SetActive(true);
-    }
-
-    private void EnablePlayerProfilePannel()
-    {
-        TurnOffAllPannels();
-        playerProfilePannel.SetActive(true);
-
-        PlayerData playerData = _saveLoadSystem.Load<PlayerData>();
-        PlayerAvatarData playerAvatarData = _saveLoadSystem.Load<PlayerAvatarData>();
-
-        profilePlayerNameText.text = "Player Name: " + playerData.NickName;
-        profilePlayerIdText.text = "Player Id: " + AuthenticationService.Instance.PlayerId;
-        profilePlayerImage.sprite = BytesToSprite(playerAvatarData.CodedValue);
-
-        Debug.Log(AuthenticationService.Instance.PlayerInfo);
+        if (panelsDictionary.ContainsKey(pannel))
+        {
+            TurnOffAllPannels();
+            GameObject panel = panelsDictionary[pannel];
+            panel.SetActive(true);
+            onEnableAction?.Invoke();
+        }
+        else
+        {
+            Debug.LogWarning("PanelType not found in dictionary.");
+        }
     }
 }

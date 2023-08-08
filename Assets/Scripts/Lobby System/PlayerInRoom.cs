@@ -4,17 +4,16 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using UnityEngine.Events;
+using Unity.Services.Core;
+using Unity.Services.Authentication;
 
 public class PlayerInRoom : MonoBehaviour
 {
-    [SerializeField] private Image playerProfilePic;
     [SerializeField] private TMP_Text playerNameText;
-    [SerializeField] private Button KickBtn;
+    
 
-    public void UpdatePlayerUI(Sprite _playerProfilePic, string _playerName, UnityAction KickBtnAction)
+    public void UpdatePlayerUI(string _playerName)
     {
-        playerProfilePic.sprite = _playerProfilePic;
         playerNameText.text = _playerName;
-        KickBtn.onClick.AddListener(KickBtnAction);
     }
 }

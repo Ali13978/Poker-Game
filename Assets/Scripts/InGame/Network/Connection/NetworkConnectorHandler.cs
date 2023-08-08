@@ -4,11 +4,13 @@ using System.Collections.Generic;
 public static class NetworkConnectorHandler
 {
     public const uint MaxPlayersAmount = 5;
-    
+
     public static INetworkConnector CurrentConnector { get; private set; }
-    
+
     private static ConnectionInputField ConnectionInputField => ConnectionInputField.Instance;
-    
+
+    public static string relayCode {get; private set;}
+
     public static void CreateGame(NetworkConnectorType connectorType)
     {
         INetworkConnector connector = GetConnector(connectorType);
@@ -18,10 +20,12 @@ public static class NetworkConnectorHandler
         connector.CreateGame();
     }
 
-    public static void JoinGame(NetworkConnectorType connectorType)
+    public static void JoinGame(NetworkConnectorType connectorType, string _relayCode)
     {
+        relayCode = _relayCode;
+
         INetworkConnector connector = GetConnector(connectorType);
-        
+
         CurrentConnector = connector;
 
         connector.JoinGame();
@@ -29,7 +33,7 @@ public static class NetworkConnectorHandler
 
     private static INetworkConnector GetConnector(NetworkConnectorType connectorType)
     {
-        IReadOnlyList<string> connectionData = ConnectionInputField.GetConnectionData(connectorType);
+        IReadOnlyList<string> connectionData = ConnectionInputField.GetConnectionData(connectorType, relayCode);
         
         INetworkConnector connector = connectorType switch
         {
