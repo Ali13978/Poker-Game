@@ -52,6 +52,7 @@ public class MainMenuUI : MonoBehaviour
     [SerializeField] GameObject mainMenuPannel;
     [SerializeField] TMP_Text playerNameText;
     [SerializeField] Image playerImage;
+    [SerializeField] TMP_Text playerChipsText;
     [SerializeField] Button startGameBtn;
     [SerializeField] Button quickJoinBtn;
     [SerializeField] Button ProfileBtn;
@@ -109,7 +110,7 @@ public class MainMenuUI : MonoBehaviour
 
         PlayerData playerData = _saveLoadSystem.Load<PlayerData>();
 
-        if (playerData.Equals(default(PlayerData)) == true)
+        if (!playerData.Equals(default(PlayerData)))
             EnablePannel(PanelType.mainMenuPannel, enableMainMenuAction);
         else
             EnablePannel(PanelType.setNamePannel, ()=> { });
@@ -389,7 +390,8 @@ public class MainMenuUI : MonoBehaviour
         enableMainMenuAction = () => {
             PlayerData playerData = _saveLoadSystem.Load<PlayerData>();
             PlayerAvatarData playerAvatarData = _saveLoadSystem.Load<PlayerAvatarData>();
-
+            
+            playerChipsText.text = playerData.Stack.ToString();
             playerImage.sprite = BytesToSprite(playerAvatarData.CodedValue);
             playerNameText.text = playerData.NickName;
         };

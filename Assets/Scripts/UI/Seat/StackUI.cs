@@ -11,7 +11,9 @@ public class StackUI : MonoBehaviour
     [SerializeField] private int _index;
     
     private static PlayerSeats PlayerSeats => PlayerSeats.Instance;
-    
+
+    private ISaveLoadSystem _saveLoadSystem;
+
     private void OnEnable()
     {
         PlayerSeats.PlayerSitEvent += OnPlayerSit;
@@ -27,6 +29,11 @@ public class StackUI : MonoBehaviour
     private void OnStackValueChanged(uint oldValue, uint newValue)
     {
         _stackText.text = newValue.ToString();
+        _saveLoadSystem = ReadonlySaveLoadSystemFactory.Instance.Get();
+        PlayerData playerData = _saveLoadSystem.Load<PlayerData>();
+
+        PlayerData data = new PlayerData(playerData.NickName, newValue);
+        _saveLoadSystem.Save(data);
     }
 
     private void OnPlayerSit(Player player, int index)

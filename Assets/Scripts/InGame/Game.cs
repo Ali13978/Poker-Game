@@ -43,6 +43,7 @@ public class Game : NetworkBehaviour
 
     [SerializeField] private float _roundsInterval;
     [SerializeField] private float _showdownEndTime;
+    
 
     // This fields is for CLIENTS. It`s tracking when Server/Host calls the 'EndStageCoroutineClientRpc' so when it`s called sets true and routine ends.
     private readonly NetworkVariable<bool> _isStageCoroutineOver = new();
@@ -394,7 +395,7 @@ public class Game : NetworkBehaviour
         {
             StopCoroutine(_stageCoroutine);
         }
-        
+    
         EndDealEvent?.Invoke(winnerInfo);
         
         Log.WriteToFile($"End deal. Winner id(`s): '{string.Join(", ", winnerInfo.Select(x => x.WinnerId))}'. Winner hand: {winnerInfo[0].Combination}");
@@ -408,7 +409,7 @@ public class Game : NetworkBehaviour
         StartCoroutine(_startDealAfterRoundsInterval);
     }
 
-    [ClientRpc]
+[ClientRpc]
     private void StartNextStageClientRpc()
     {
         GameStage nextStage = _currentGameStage.Value + 1;

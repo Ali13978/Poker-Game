@@ -9,12 +9,16 @@ public class LoginManager : MonoBehaviour
     private async void Start()
     {
         InitializationOptions options = new InitializationOptions();
-        options.SetProfile(Random.Range(1, 10000).ToString());
+        options.SetProfile("Ali1397");
 
         await UnityServices.InitializeAsync(options);
         AuthenticationService.Instance.SignedIn +=()=> {
             StartCoroutine(MainMenuUI.instance.StartLoginLoading());
         };
-        await AuthenticationService.Instance.SignInAnonymouslyAsync();
+
+        if(!AuthenticationService.Instance.IsSignedIn)
+            await AuthenticationService.Instance.SignInAnonymouslyAsync();
+        else
+            StartCoroutine(MainMenuUI.instance.StartLoginLoading());
     }
 }
