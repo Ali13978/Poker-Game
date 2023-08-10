@@ -32,5 +32,7 @@ public class UI : MonoBehaviour
                 Debug.Log(e);
             }
         }
+
+        LobbyManager.instance.LeaveLobby(() => { }, () => { });
     }
 }   

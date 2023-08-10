@@ -44,7 +44,6 @@ public class Game : NetworkBehaviour
     [SerializeField] private float _roundsInterval;
     [SerializeField] private float _showdownEndTime;
     
-
     // This fields is for CLIENTS. It`s tracking when Server/Host calls the 'EndStageCoroutineClientRpc' so when it`s called sets true and routine ends.
     private readonly NetworkVariable<bool> _isStageCoroutineOver = new();
 
@@ -144,7 +143,7 @@ public class Game : NetworkBehaviour
             Player player = PlayerSeats.Players[turnSequence[i]];
             List<CardObject> completeCards = _board.Cards.ToList();
             completeCards.Add(player.PocketCard1); completeCards.Add(player.PocketCard2);
-
+            
             Hand bestHand = CombinationСalculator.GetBestHand(new Hand(completeCards));
 
             if (i == 0 || bestHand > winnerHand)
@@ -157,6 +156,7 @@ public class Game : NetworkBehaviour
             {
                 winners.Add(player);
             }
+            
         }
         
         if (winners.Count == 0)
@@ -175,8 +175,13 @@ public class Game : NetworkBehaviour
         {
             winnerInfo.Add(new WinnerInfo(winner.OwnerClientId, Pot.GetWinValue(winner, winners), winnerHand.ToString()));
         }
+        
 
         EndDealClientRpc(winnerInfo.ToArray());
+
+        Debug.Log("EndDealClientRpc executed");
+        ForceLostPlayerLeaveClientRpc();
+
     }
 
     private IEnumerator Bet(int[] turnSequence)
@@ -205,6 +210,7 @@ public class Game : NetworkBehaviour
                     ulong winnerId = notFoldPlayers[0].OwnerClientId;
                     WinnerInfo[] winnerInfo = {new(winnerId, Pot.GetWinValue(notFoldPlayers[0], new []{notFoldPlayers[0]}))};
                     EndDealClientRpc(winnerInfo);
+                    ForceLostPlayerLeaveClientRpc();
                     yield break;
                 }
 
@@ -262,6 +268,7 @@ public class Game : NetworkBehaviour
         ulong winnerId = winner!.OwnerClientId; 
         WinnerInfo[] winnerInfo = {new(winnerId, Pot.GetWinValue(winner, new []{winner}))};
         EndDealClientRpc(winnerInfo);
+        ForceLostPlayerLeaveClientRpc();
     }
 
     private IEnumerator StartDealAfterRoundsInterval()
@@ -322,7 +329,7 @@ public class Game : NetworkBehaviour
         return PlayerSeats.Players.Where(x => x != null && x.BetAction != BetAction.Fold).Select(x => x.BetAmount).Distinct().Skip(1).Any() == false;
     }
     
-    #region RPC
+#region RPC
 
     [ServerRpc]
     private void ChangeIsStageCoroutineOverValueServerRpc(bool value)
@@ -385,7 +392,7 @@ public class Game : NetworkBehaviour
     private void EndDealClientRpc(WinnerInfo[] winnerInfo)
     {
         if (IsServer == true)
-        {        
+        {
             SetCurrentGameStageValueServerRpc(GameStage.Empty);
             SetIsPlayingValueServerRpc(false);
             SetCodedBoardCardsValueServerRpc(string.Empty);
@@ -395,7 +402,8 @@ public class Game : NetworkBehaviour
         {
             StopCoroutine(_stageCoroutine);
         }
-    
+        
+
         EndDealEvent?.Invoke(winnerInfo);
         
         Log.WriteToFile($"End deal. Winner id(`s): '{string.Join(", ", winnerInfo.Select(x => x.WinnerId))}'. Winner hand: {winnerInfo[0].Combination}");
@@ -432,6 +440,29 @@ public class Game : NetworkBehaviour
     {
         GameStageOverEvent?.Invoke(GameStage.Showdown);
     }
+
+    [ClientRpc]
+    private void ForceLostPlayerLeaveClientRpc()
+    {
+        Player me = new Player();
+        int[] turnSequence = _boardButton.GetShowdownTurnSequence();
+
+        for (var i = 0; i < turnSequence.Length; i++)
+        {
+            Player player = PlayerSeats.Players[turnSequence[i]];
+
+            if (player.OwnerClientId == OwnerClientId)
+            {
+                me = player;
+                break;
+            }
+        }
+
+        if(me.Stack <= 0)
+        {
+            me.Leave();
+        }
+    }
     
-    #endregion
+#endregion
 }

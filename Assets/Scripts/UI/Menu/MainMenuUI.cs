@@ -34,7 +34,14 @@ public class MainMenuUI : MonoBehaviour
         lobbyPannel
     };
 
+    private enum MenuPannelType
+    {
+        mainPannel,
+        tournamentPannel
+    };
+
     private Dictionary<PanelType, GameObject> panelsDictionary;
+    private Dictionary<MenuPannelType, GameObject> menuPanelsDictionary;
 
     [Header("Login-Pannel")]
     [SerializeField] GameObject loginPannel;
@@ -50,12 +57,16 @@ public class MainMenuUI : MonoBehaviour
 
     [Header("Mainmenu-Pannel")]
     [SerializeField] GameObject mainMenuPannel;
+    [SerializeField] GameObject mainPannel;
+    [SerializeField] GameObject TournamentsPannel;
     [SerializeField] TMP_Text playerNameText;
     [SerializeField] Image playerImage;
     [SerializeField] TMP_Text playerChipsText;
     [SerializeField] Button startGameBtn;
     [SerializeField] Button quickJoinBtn;
     [SerializeField] Button ProfileBtn;
+    [SerializeField] Button mainmenuBtn;
+    [SerializeField] Button TournamentsBtn;
     private Action enableMainMenuAction;
 
     [Header("StartGame-Pannel")]
@@ -111,9 +122,12 @@ public class MainMenuUI : MonoBehaviour
         PlayerData playerData = _saveLoadSystem.Load<PlayerData>();
 
         if (!playerData.Equals(default(PlayerData)))
+        {
             EnablePannel(PanelType.mainMenuPannel, enableMainMenuAction);
+            EnableMenuPannel(MenuPannelType.mainPannel, () => { });
+        }
         else
-            EnablePannel(PanelType.setNamePannel, ()=> { });
+            EnablePannel(PanelType.setNamePannel, () => { });
     }
     #endregion
 
@@ -228,6 +242,12 @@ public class MainMenuUI : MonoBehaviour
             { PanelType.lobbyPannel, lobbyPannel }
         };
 
+        menuPanelsDictionary = new Dictionary<MenuPannelType, GameObject>
+        {
+            {MenuPannelType.mainPannel, mainPannel },
+            {MenuPannelType.tournamentPannel, TournamentsPannel }
+        };
+
         await UnityServices.InitializeAsync();
         _saveLoadSystem = ReadonlySaveLoadSystemFactory.Instance.Get();
 
@@ -238,6 +258,16 @@ public class MainMenuUI : MonoBehaviour
         EnablePannel(PanelType.loginPannel, () => { });
 
         //Main Menu Pannel
+        mainmenuBtn.onClick.AddListener(() => {
+            EnablePannel(PanelType.mainMenuPannel, enableMainMenuAction);
+            EnableMenuPannel(MenuPannelType.mainPannel, () => { });
+        });
+
+        TournamentsBtn.onClick.AddListener(() => {
+            EnablePannel(PanelType.mainMenuPannel, enableMainMenuAction);
+            EnableMenuPannel(MenuPannelType.tournamentPannel, () => { });
+        });
+
         startGameBtn.onClick.AddListener(() =>
         {
             startGamePannel.SetActive(true);
@@ -250,6 +280,7 @@ public class MainMenuUI : MonoBehaviour
                 EnablePannel(PanelType.lobbyPannel, enableLobbyPannelAction);
             }, () => {
                 EnablePannel(PanelType.mainMenuPannel, enableMainMenuAction);
+                EnableMenuPannel(MenuPannelType.mainPannel, () => { });
             });
         });
 
@@ -287,6 +318,7 @@ public class MainMenuUI : MonoBehaviour
                 EnablePannel(PanelType.lobbyPannel, enableLobbyPannelAction);
             }, () => {
                 EnablePannel(PanelType.mainMenuPannel, enableMainMenuAction);
+                EnableMenuPannel(MenuPannelType.mainPannel, () => { });
             });
         });
 
@@ -316,6 +348,7 @@ public class MainMenuUI : MonoBehaviour
                 EnablePannel(PanelType.lobbyPannel, enableLobbyPannelAction);
             }, () => {
                 EnablePannel(PanelType.mainMenuPannel, enableMainMenuAction);
+                EnableMenuPannel(MenuPannelType.mainPannel, () => { });
             });
         });
 
@@ -330,6 +363,7 @@ public class MainMenuUI : MonoBehaviour
             _saveLoadSystem.Save(playerData);
 
             EnablePannel(PanelType.mainMenuPannel, enableMainMenuAction);
+            EnableMenuPannel(MenuPannelType.mainPannel, () => { });
         });
 
         //Player Profile Pannel
@@ -348,11 +382,13 @@ public class MainMenuUI : MonoBehaviour
 
             _saveLoadSystem.Save(avatarData);
             EnablePannel(PanelType.mainMenuPannel, enableMainMenuAction);
+            EnableMenuPannel(MenuPannelType.mainPannel, () => { });
         });
 
         profileBackBtn.onClick.AddListener(() => {
 
             EnablePannel(PanelType.mainMenuPannel, enableMainMenuAction);
+            EnableMenuPannel(MenuPannelType.mainPannel, () => { });
         });
 
         //Lobby Pannel
@@ -369,6 +405,7 @@ public class MainMenuUI : MonoBehaviour
             catch (RelayServiceException e)
             {
                 EnablePannel(PanelType.mainMenuPannel, enableMainMenuAction);
+                EnableMenuPannel(MenuPannelType.mainPannel, () => { });
                 Debug.Log(e);
             }
         });
@@ -379,6 +416,7 @@ public class MainMenuUI : MonoBehaviour
 
             LobbyManager.instance.LeaveLobby(() => {
                 EnablePannel(PanelType.mainMenuPannel, enableMainMenuAction);
+                EnableMenuPannel(MenuPannelType.mainPannel, () => { });
             }, () => {
                 EnablePannel(PanelType.lobbyPannel, enableLobbyPannelAction);
             });
@@ -463,6 +501,7 @@ public class MainMenuUI : MonoBehaviour
             catch (RelayServiceException e)
             {
                 EnablePannel(PanelType.mainMenuPannel, enableMainMenuAction);
+                EnableMenuPannel(MenuPannelType.mainPannel, () => { });
                 Debug.Log(e);
             }
         };
@@ -478,6 +517,12 @@ public class MainMenuUI : MonoBehaviour
         lobbyPannel.SetActive(false);
     }
 
+    private void TurnOffMenuPannels()
+    {
+        mainPannel.SetActive(false);
+        TournamentsPannel.SetActive(false);
+    }
+
     private void EnablePannel(PanelType pannel, Action onEnableAction)
     {
         if (panelsDictionary.ContainsKey(pannel))
@@ -491,5 +536,13 @@ public class MainMenuUI : MonoBehaviour
         {
             Debug.LogWarning("PanelType not found in dictionary.");
         }
+    }
+
+    private void EnableMenuPannel(MenuPannelType pannel, Action onEnableAction)
+    {
+        TurnOffMenuPannels();
+        GameObject panel = menuPanelsDictionary[pannel];
+        panel.SetActive(true);
+        onEnableAction?.Invoke();
     }
 }

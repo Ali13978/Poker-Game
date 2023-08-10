@@ -120,13 +120,13 @@ public class LobbyManager : MonoBehaviour
         return player;
     }
 
-    public void LeaveLobby(Action leaveLobbySucessful, Action leavelobbyFailed)
+    public async void LeaveLobby(Action leaveLobbySucessful, Action leavelobbyFailed)
     {
         if (joinedLobby == null)
             return;
         try
         {   
-            LobbyService.Instance.RemovePlayerAsync(joinedLobby.Id, AuthenticationService.Instance.PlayerId);
+            await LobbyService.Instance.RemovePlayerAsync(joinedLobby.Id, AuthenticationService.Instance.PlayerId);
             //hostLobby = null;
             joinedLobby = null;
             leaveLobbySucessful?.Invoke();
@@ -225,8 +225,8 @@ public class LobbyManager : MonoBehaviour
         if (newPlayersCount != currentPlayersCount)
         {
             Debug.Log("Player added or removed");
-            MainMenuUI.instance.lobbyPlayersEditedAction?.Invoke();
             currentPlayersCount = newPlayersCount;
+            MainMenuUI.instance.lobbyPlayersEditedAction?.Invoke();
         }
     }
 }

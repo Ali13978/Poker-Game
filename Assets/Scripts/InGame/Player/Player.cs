@@ -97,6 +97,21 @@ public class Player : NetworkBehaviour
         }
     }
 
+    public void Leave()
+    {
+        SetSeatServerRpc(NullSeatNumber);
+
+        LeaveSeat();
+        if (IsServer)
+        {
+            Debug.Log("Lost Player is Host");
+        }
+        else
+        {
+            Shutdown();
+        }
+    }
+
     public override void OnNetworkSpawn()
     {
         if (IsOwner == false)
@@ -246,20 +261,20 @@ public class Player : NetworkBehaviour
         {
             SetSelectedBetActionServerRpc(BetAction.Empty);
         }
-        
+
         if (IsServer == false)
         {
             return;
         }
-        
+
         if (winnerInfo.Select(x => x.WinnerId).Contains(OwnerClientId) == true)
-        {        
+        {
             WinnerInfo info = winnerInfo.FirstOrDefault(x => x.WinnerId == OwnerClientId);
             SetStackAmountClientRpc(_stack.Value + info.Chips);
         }
 
         SetBetAmountClientRpc(0);
-    } 
+    }
     
     private void TakeSeat(int seatNumber, bool forceToSeat = false)
     {
