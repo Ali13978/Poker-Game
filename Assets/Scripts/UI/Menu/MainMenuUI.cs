@@ -69,6 +69,17 @@ public class MainMenuUI : MonoBehaviour
     [SerializeField] Button TournamentsBtn;
     private Action enableMainMenuAction;
 
+    [Header("Tournaments Pannel")]
+    [SerializeField] Button tournamentABtn;
+    [SerializeField] TMP_Text tournamentABtnText;
+    [SerializeField] TMP_Text tournamentACurrentStageText;
+    [SerializeField] uint TournamentAEntryFee;
+    [SerializeField] Button tournamentBBtn;
+    [SerializeField] TMP_Text tournamentBBtnText;
+    [SerializeField] TMP_Text tournamentBCurrentStageText;
+    [SerializeField] uint TournamentBEntryFee;
+    private Action enableTournamentPannelAction;
+
     [Header("StartGame-Pannel")]
     [SerializeField] GameObject startGamePannel;
     [SerializeField] Button createRoomBtn;
@@ -92,9 +103,14 @@ public class MainMenuUI : MonoBehaviour
     [SerializeField] GameObject lobbyPannel;
     [SerializeField] GameObject PlayerInLobbyPrefab;
     [SerializeField] TMP_Text lobbyCodeText;
+    [SerializeField] TMP_Text lobbyNumberOfPlayersText;
     [SerializeField] Transform lobbyPlayersHolder;
-    [SerializeField] Button lobbyStartGameBtn;
+    //[SerializeField] Button lobbyStartGameBtn;
     [SerializeField] Button lobbyLeaveBtn;
+    [SerializeField] TMP_Text lobbyTimerText;
+    [SerializeField] int minPlayersReq;
+    [SerializeField] float lobbyStartGameTimer = 60f;
+    private bool isLobbyTimerStarted;
     public Action lobbyPlayersEditedAction;
     private Action enableLobbyPannelAction;
     public Action<string> joinRelayAction;
@@ -265,7 +281,7 @@ public class MainMenuUI : MonoBehaviour
 
         TournamentsBtn.onClick.AddListener(() => {
             EnablePannel(PanelType.mainMenuPannel, enableMainMenuAction);
-            EnableMenuPannel(MenuPannelType.tournamentPannel, () => { });
+            EnableMenuPannel(MenuPannelType.tournamentPannel, enableTournamentPannelAction);
         });
 
         startGameBtn.onClick.AddListener(() =>
@@ -288,7 +304,7 @@ public class MainMenuUI : MonoBehaviour
         {
             EnablePannel(PanelType.playerProfilePannel, enablePlayerProfilePannelAction);
         });
-
+        
         //Start Game Pannel
         startGamePannelBackBtn.onClick.AddListener(() =>
         {
@@ -393,22 +409,22 @@ public class MainMenuUI : MonoBehaviour
 
         //Lobby Pannel
 
-        lobbyStartGameBtn.onClick.AddListener(() => {
-            Debug.Log("Game Started");
-            try
-            {
-                EnablePannel(PanelType.loadingPannel, () => { });
-                startGamePannel.SetActive(false);
+        //lobbyStartGameBtn.onClick.AddListener(() => {
+        //    Debug.Log("Game Started");
+        //    try
+        //    {
+        //        EnablePannel(PanelType.loadingPannel, () => { });
+        //        startGamePannel.SetActive(false);
 
-                NetworkConnectorHandler.CreateGame(NetworkConnectorType.UnityRelay);
-            }
-            catch (RelayServiceException e)
-            {
-                EnablePannel(PanelType.mainMenuPannel, enableMainMenuAction);
-                EnableMenuPannel(MenuPannelType.mainPannel, () => { });
-                Debug.Log(e);
-            }
-        });
+        //        NetworkConnectorHandler.CreateGame(NetworkConnectorType.UnityRelay);
+        //    }
+        //    catch (RelayServiceException e)
+        //    {
+        //        EnablePannel(PanelType.mainMenuPannel, enableMainMenuAction);
+        //        EnableMenuPannel(MenuPannelType.mainPannel, () => { });
+        //        Debug.Log(e);
+        //    }
+        //});
 
 
         lobbyLeaveBtn.onClick.AddListener(() => {
@@ -421,6 +437,49 @@ public class MainMenuUI : MonoBehaviour
                 EnablePannel(PanelType.lobbyPannel, enableLobbyPannelAction);
             });
         });
+    }
+
+    private void Update()
+    {
+        if (!isLobbyTimerStarted)
+            return;
+
+        HandleLobbyTimer();
+    }
+    
+    private void HandleLobbyTimer()
+    {
+        Unity.Services.Lobbies.Models.Lobby joinedLobby = LobbyManager.instance.GetJoinedLobby();
+        if (joinedLobby == null)
+            return;
+        if (joinedLobby.Players.Count < minPlayersReq)
+            return;
+        lobbyStartGameTimer -= Time.deltaTime;
+        int Timer = (int)lobbyStartGameTimer;
+        lobbyTimerText.text = Timer.ToString();
+        if (lobbyStartGameTimer <= 0)
+        {
+            float lobbyTimerMax = 200f;
+            lobbyStartGameTimer = lobbyTimerMax;
+            lobbyTimerText.text = "0";
+
+            //time elapsed do something
+            lobbyTimerText.gameObject.SetActive(false);
+
+            if (!LobbyManager.instance.IsHost())
+                return;
+            try
+            {
+                EnablePannel(PanelType.loadingPannel, () => { });
+
+                NetworkConnectorHandler.CreateGame(NetworkConnectorType.UnityRelay);
+            }
+            catch (RelayServiceException e)
+            {
+                EnablePannel(PanelType.lobbyPannel, enableLobbyPannelAction);
+                Debug.Log(e);
+            }
+        }
     }
 
     private void InitializeActions()
@@ -446,13 +505,112 @@ public class MainMenuUI : MonoBehaviour
             Debug.Log(AuthenticationService.Instance.PlayerInfo);
         };
 
+        enableTournamentPannelAction = () => {
+            TournamentAData tournamentAData = _saveLoadSystem.Load<TournamentAData>();
+            TournamentBData tournamentBData = _saveLoadSystem.Load<TournamentBData>();
+            if (tournamentAData == null)
+                tournamentAData = new TournamentAData(TournamentAData.tournamentStage.QuarterFinal, false);
+            if (tournamentBData == null)
+                tournamentBData = new TournamentBData(TournamentBData.tournamentStage.QuarterFinal, false);
+
+            if (tournamentAData.isStarted)
+            {
+                tournamentABtnText.text = "Continue";
+                tournamentACurrentStageText.text = tournamentAData.CurrentStage.ToString();
+
+                tournamentABtn.onClick.AddListener(() => {
+
+                    EnablePannel(PanelType.loadingPannel, () => { });
+
+                    LobbyManager.instance.QuickJoinLobby(() => { 
+                        EnablePannel(PanelType.lobbyPannel, enableLobbyPannelAction);
+                    }, () => {
+                        EnablePannel(PanelType.mainMenuPannel, enableMainMenuAction);
+                        EnableMenuPannel(MenuPannelType.mainPannel, () => { });
+                    });
+                });
+            }
+            else
+            {
+                tournamentABtnText.text = "Pay n Play";
+                tournamentACurrentStageText.text = "Join Now";
+                tournamentABtn.onClick.AddListener(() => {
+
+                    PlayerData playerData = _saveLoadSystem.Load<PlayerData>();
+
+                    if (playerData.Stack >= TournamentAEntryFee)
+                    {
+                        EnablePannel(PanelType.loadingPannel, () => { });
+
+                        uint stack = playerData.Stack - TournamentAEntryFee;
+                        PlayerData data = new PlayerData(playerData.NickName, stack);
+
+                        _saveLoadSystem.Save(data);
+                        LobbyManager.instance.QuickJoinLobby(() => {
+                            TournamentAData tournamentData = new TournamentAData(TournamentAData.tournamentStage.QuarterFinal, true);
+                            _saveLoadSystem.Save(tournamentData);
+
+                            EnablePannel(PanelType.lobbyPannel, enableLobbyPannelAction);
+                        }, () => {
+                            TournamentAData tournamentData = new TournamentAData(TournamentAData.tournamentStage.QuarterFinal, false);
+                            _saveLoadSystem.Save(tournamentData);
+                            EnablePannel(PanelType.mainMenuPannel, enableMainMenuAction);
+                            EnableMenuPannel(MenuPannelType.mainPannel, () => { });
+                        });
+                    }
+                });
+            }
+
+            if (tournamentBData.isStarted)
+            {
+                tournamentBBtnText.text = "Continue";
+                tournamentBCurrentStageText.text = tournamentBData.CurrentStage.ToString();
+                tournamentBBtn.onClick.AddListener(() => {
+
+                    EnablePannel(PanelType.loadingPannel, () => { });
+
+                    LobbyManager.instance.QuickJoinLobby(() => {
+                        EnablePannel(PanelType.lobbyPannel, enableLobbyPannelAction);
+                    }, () => {
+                        EnablePannel(PanelType.mainMenuPannel, enableMainMenuAction);
+                        EnableMenuPannel(MenuPannelType.mainPannel, () => { });
+                    });
+                });
+            }
+            else
+            {
+                tournamentBBtnText.text = "Pay n Play";
+                tournamentBCurrentStageText.text = "Join Now";
+                tournamentBBtn.onClick.AddListener(() => {
+                    PlayerData playerData = _saveLoadSystem.Load<PlayerData>();
+
+                    if (playerData.Stack >= TournamentBEntryFee)
+                    {
+                        EnablePannel(PanelType.loadingPannel, () => { });
+
+                        uint stack = playerData.Stack - TournamentBEntryFee;
+                        PlayerData data = new PlayerData(playerData.NickName, stack);
+
+                        _saveLoadSystem.Save(data);
+                        LobbyManager.instance.QuickJoinLobby(() => {
+                            TournamentBData tournamentData = new TournamentBData(TournamentBData.tournamentStage.QuarterFinal, true);
+                            _saveLoadSystem.Save(tournamentData);
+
+                            EnablePannel(PanelType.lobbyPannel, enableLobbyPannelAction);
+                        }, () => {
+                            TournamentBData tournamentData = new TournamentBData(TournamentBData.tournamentStage.QuarterFinal, false);
+                            _saveLoadSystem.Save(tournamentData);
+                            EnablePannel(PanelType.mainMenuPannel, enableMainMenuAction);
+                            EnableMenuPannel(MenuPannelType.mainPannel, () => { });
+                        });
+                    }
+                });
+            }
+        };
+
         enableLobbyPannelAction = () => {
             lobbyCodeText.text = LobbyManager.instance.GetLobbyCode();
 
-            if (LobbyManager.instance.IsHost())
-                lobbyStartGameBtn.gameObject.SetActive(true);
-            else
-                lobbyStartGameBtn.gameObject.SetActive(false);
         };
 
         lobbyPlayersEditedAction = () => {
@@ -478,10 +636,22 @@ public class MainMenuUI : MonoBehaviour
                 
             }
 
-            if (LobbyManager.instance.IsHost())
-                lobbyStartGameBtn.gameObject.SetActive(true);
+            lobbyNumberOfPlayersText.text = "Players:     " + currentPlayersInLobby + "/9";
+            
+            if(currentPlayersInLobby >= minPlayersReq)
+            {
+                Debug.Log("Timer Started");
+                isLobbyTimerStarted = true;
+            }
+
             else
-                lobbyStartGameBtn.gameObject.SetActive(false);
+            {
+                lobbyTimerText.text = "Waiting for players";
+            }
+            //if (LobbyManager.instance.IsHost())
+            //    lobbyStartGameBtn.gameObject.SetActive(true);
+            //else
+            //    lobbyStartGameBtn.gameObject.SetActive(false);
         };
 
         joinRelayAction = (newRelayCode) => {

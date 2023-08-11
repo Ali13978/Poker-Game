@@ -18,6 +18,7 @@ public class LobbyManager : MonoBehaviour
 
     private ISaveLoadSystem _saveLoadSystem;
     int currentPlayersCount = 0;
+    
 
     #region Singleton
     public static LobbyManager instance;
