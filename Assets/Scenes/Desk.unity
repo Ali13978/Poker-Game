@@ -3723,6 +3723,10 @@ PrefabInstance:
       propertyPath: m_Enabled
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5583830802040180282, guid: cc70c3eaf0be97f4dacabe4df60e3253, type: 3}
+      propertyPath: m_FillAmount
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 5597228465117885303, guid: cc70c3eaf0be97f4dacabe4df60e3253, type: 3}
       propertyPath: m_Name
       value: Seat
@@ -4504,7 +4508,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 5711857578682196954, guid: 5085809d5260f1542898eba3bb076119, type: 3}
       propertyPath: _betTime
-      value: 180
+      value: 20
       objectReference: {fileID: 0}
     - target: {fileID: 5711857578682196955, guid: 5085809d5260f1542898eba3bb076119, type: 3}
       propertyPath: m_RootOrder
