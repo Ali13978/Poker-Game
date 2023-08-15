@@ -491,21 +491,8 @@ public class MainMenuUI : MonoBehaviour
             playerChipsText.text = playerData.Stack.ToString();
             playerImage.sprite = BytesToSprite(playerAvatarData.CodedValue);
             playerNameText.text = playerData.NickName;
-        };
 
-        enablePlayerProfilePannelAction = () => {
-
-            PlayerData playerData = _saveLoadSystem.Load<PlayerData>();
-            PlayerAvatarData playerAvatarData = _saveLoadSystem.Load<PlayerAvatarData>();
-
-            profilePlayerNameText.text = "Player Name: " + playerData.NickName;
-            profilePlayerIdText.text = "Player Id: " + AuthenticationService.Instance.PlayerId;
-            profilePlayerImage.sprite = BytesToSprite(playerAvatarData.CodedValue);
-
-            Debug.Log(AuthenticationService.Instance.PlayerInfo);
-        };
-
-        enableTournamentPannelAction = () => {
+            //tornuments stuff
             TournamentAData tournamentAData = _saveLoadSystem.Load<TournamentAData>();
             TournamentBData tournamentBData = _saveLoadSystem.Load<TournamentBData>();
             if (tournamentAData == null)
@@ -522,7 +509,7 @@ public class MainMenuUI : MonoBehaviour
 
                     EnablePannel(PanelType.loadingPannel, () => { });
 
-                    LobbyManager.instance.QuickJoinLobby(() => { 
+                    LobbyManager.instance.QuickJoinLobby(() => {
                         EnablePannel(PanelType.lobbyPannel, enableLobbyPannelAction);
                     }, () => {
                         EnablePannel(PanelType.mainMenuPannel, enableMainMenuAction);
@@ -536,14 +523,14 @@ public class MainMenuUI : MonoBehaviour
                 tournamentACurrentStageText.text = "Join Now";
                 tournamentABtn.onClick.AddListener(() => {
 
-                    PlayerData playerData = _saveLoadSystem.Load<PlayerData>();
+                    PlayerData _playerData = _saveLoadSystem.Load<PlayerData>();
 
-                    if (playerData.Stack >= TournamentAEntryFee)
+                    if (_playerData.Stack >= TournamentAEntryFee)
                     {
                         EnablePannel(PanelType.loadingPannel, () => { });
 
-                        uint stack = playerData.Stack - TournamentAEntryFee;
-                        PlayerData data = new PlayerData(playerData.NickName, stack);
+                        uint stack = _playerData.Stack - TournamentAEntryFee;
+                        PlayerData data = new PlayerData(_playerData.NickName, stack);
 
                         _saveLoadSystem.Save(data);
                         LobbyManager.instance.QuickJoinLobby(() => {
@@ -582,14 +569,14 @@ public class MainMenuUI : MonoBehaviour
                 tournamentBBtnText.text = "Pay n Play";
                 tournamentBCurrentStageText.text = "Join Now";
                 tournamentBBtn.onClick.AddListener(() => {
-                    PlayerData playerData = _saveLoadSystem.Load<PlayerData>();
+                    PlayerData _playerData = _saveLoadSystem.Load<PlayerData>();
 
-                    if (playerData.Stack >= TournamentBEntryFee)
+                    if (_playerData.Stack >= TournamentBEntryFee)
                     {
                         EnablePannel(PanelType.loadingPannel, () => { });
 
-                        uint stack = playerData.Stack - TournamentBEntryFee;
-                        PlayerData data = new PlayerData(playerData.NickName, stack);
+                        uint stack = _playerData.Stack - TournamentBEntryFee;
+                        PlayerData data = new PlayerData(_playerData.NickName, stack);
 
                         _saveLoadSystem.Save(data);
                         LobbyManager.instance.QuickJoinLobby(() => {
@@ -606,6 +593,121 @@ public class MainMenuUI : MonoBehaviour
                     }
                 });
             }
+        };
+
+        enablePlayerProfilePannelAction = () => {
+
+            PlayerData playerData = _saveLoadSystem.Load<PlayerData>();
+            PlayerAvatarData playerAvatarData = _saveLoadSystem.Load<PlayerAvatarData>();
+
+            profilePlayerNameText.text = "Player Name: " + playerData.NickName;
+            profilePlayerIdText.text = "Player Id: " + AuthenticationService.Instance.PlayerId;
+            profilePlayerImage.sprite = BytesToSprite(playerAvatarData.CodedValue);
+
+            Debug.Log(AuthenticationService.Instance.PlayerInfo);
+        };
+
+        enableTournamentPannelAction = () => {
+            //TournamentAData tournamentAData = _saveLoadSystem.Load<TournamentAData>();
+            //TournamentBData tournamentBData = _saveLoadSystem.Load<TournamentBData>();
+            //if (tournamentAData == null)
+            //    tournamentAData = new TournamentAData(TournamentAData.tournamentStage.QuarterFinal, false);
+            //if (tournamentBData == null)
+            //    tournamentBData = new TournamentBData(TournamentBData.tournamentStage.QuarterFinal, false);
+
+            //if (tournamentAData.isStarted)
+            //{
+            //    tournamentABtnText.text = "Continue";
+            //    tournamentACurrentStageText.text = tournamentAData.CurrentStage.ToString();
+
+            //    tournamentABtn.onClick.AddListener(() => {
+
+            //        EnablePannel(PanelType.loadingPannel, () => { });
+
+            //        LobbyManager.instance.QuickJoinLobby(() => { 
+            //            EnablePannel(PanelType.lobbyPannel, enableLobbyPannelAction);
+            //        }, () => {
+            //            EnablePannel(PanelType.mainMenuPannel, enableMainMenuAction);
+            //            EnableMenuPannel(MenuPannelType.mainPannel, () => { });
+            //        });
+            //    });
+            //}
+            //else
+            //{
+            //    tournamentABtnText.text = "Pay n Play";
+            //    tournamentACurrentStageText.text = "Join Now";
+            //    tournamentABtn.onClick.AddListener(() => {
+
+            //        PlayerData playerData = _saveLoadSystem.Load<PlayerData>();
+
+            //        if (playerData.Stack >= TournamentAEntryFee)
+            //        {
+            //            EnablePannel(PanelType.loadingPannel, () => { });
+
+            //            uint stack = playerData.Stack - TournamentAEntryFee;
+            //            PlayerData data = new PlayerData(playerData.NickName, stack);
+
+            //            _saveLoadSystem.Save(data);
+            //            LobbyManager.instance.QuickJoinLobby(() => {
+            //                TournamentAData tournamentData = new TournamentAData(TournamentAData.tournamentStage.QuarterFinal, true);
+            //                _saveLoadSystem.Save(tournamentData);
+
+            //                EnablePannel(PanelType.lobbyPannel, enableLobbyPannelAction);
+            //            }, () => {
+            //                TournamentAData tournamentData = new TournamentAData(TournamentAData.tournamentStage.QuarterFinal, false);
+            //                _saveLoadSystem.Save(tournamentData);
+            //                EnablePannel(PanelType.mainMenuPannel, enableMainMenuAction);
+            //                EnableMenuPannel(MenuPannelType.mainPannel, () => { });
+            //            });
+            //        }
+            //    });
+            //}
+
+            //if (tournamentBData.isStarted)
+            //{
+            //    tournamentBBtnText.text = "Continue";
+            //    tournamentBCurrentStageText.text = tournamentBData.CurrentStage.ToString();
+            //    tournamentBBtn.onClick.AddListener(() => {
+
+            //        EnablePannel(PanelType.loadingPannel, () => { });
+
+            //        LobbyManager.instance.QuickJoinLobby(() => {
+            //            EnablePannel(PanelType.lobbyPannel, enableLobbyPannelAction);
+            //        }, () => {
+            //            EnablePannel(PanelType.mainMenuPannel, enableMainMenuAction);
+            //            EnableMenuPannel(MenuPannelType.mainPannel, () => { });
+            //        });
+            //    });
+            //}
+            //else
+            //{
+            //    tournamentBBtnText.text = "Pay n Play";
+            //    tournamentBCurrentStageText.text = "Join Now";
+            //    tournamentBBtn.onClick.AddListener(() => {
+            //        PlayerData playerData = _saveLoadSystem.Load<PlayerData>();
+
+            //        if (playerData.Stack >= TournamentBEntryFee)
+            //        {
+            //            EnablePannel(PanelType.loadingPannel, () => { });
+
+            //            uint stack = playerData.Stack - TournamentBEntryFee;
+            //            PlayerData data = new PlayerData(playerData.NickName, stack);
+
+            //            _saveLoadSystem.Save(data);
+            //            LobbyManager.instance.QuickJoinLobby(() => {
+            //                TournamentBData tournamentData = new TournamentBData(TournamentBData.tournamentStage.QuarterFinal, true);
+            //                _saveLoadSystem.Save(tournamentData);
+
+            //                EnablePannel(PanelType.lobbyPannel, enableLobbyPannelAction);
+            //            }, () => {
+            //                TournamentBData tournamentData = new TournamentBData(TournamentBData.tournamentStage.QuarterFinal, false);
+            //                _saveLoadSystem.Save(tournamentData);
+            //                EnablePannel(PanelType.mainMenuPannel, enableMainMenuAction);
+            //                EnableMenuPannel(MenuPannelType.mainPannel, () => { });
+            //            });
+            //        }
+            //    });
+            //}
         };
 
         enableLobbyPannelAction = () => {
