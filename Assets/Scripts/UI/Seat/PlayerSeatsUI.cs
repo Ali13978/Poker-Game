@@ -22,6 +22,8 @@ public class PlayerSeatsUI : MonoBehaviour
     
     private IEnumerator _setPlayerAvatarImageWhenLoadedRoutine;
 
+    public int availableSeatNumber = 0;
+
     private void OnEnable()
     {
         PlayerSeats.PlayerSitEvent += OnPlayerSit;
@@ -162,7 +164,7 @@ public class PlayerSeatsUI : MonoBehaviour
     }
 
     // Button.
-    private void OnPlayerClickTakeButton(int seatNumber)
+    public void OnPlayerClickTakeButton(int seatNumber)
     {
         PlayerClickTakeButtonEvent?.Invoke(seatNumber);
     }

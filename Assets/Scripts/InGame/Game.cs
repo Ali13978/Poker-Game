@@ -43,7 +43,9 @@ public class Game : NetworkBehaviour
 
     [SerializeField] private float _roundsInterval;
     [SerializeField] private float _showdownEndTime;
-    
+
+    private int roundNumber = 1;
+
     // This fields is for CLIENTS. It`s tracking when Server/Host calls the 'EndStageCoroutineClientRpc' so when it`s called sets true and routine ends.
     private readonly NetworkVariable<bool> _isStageCoroutineOver = new();
 
@@ -337,6 +339,27 @@ public class Game : NetworkBehaviour
         _isStageCoroutineOver.Value = value;
     }
 
+[ServerRpc(RequireOwnership = false)]
+    public void TakeSeatServerRpc(ServerRpcParams rpcParams = default)
+    {
+        Debug.Log("Take Seat Server RPC Executed");
+        int seatNumber = PlayerSeatsUI.Instance.availableSeatNumber;
+                
+        TakeSeatClientRpc(seatNumber, rpcParams.Receive.SenderClientId);
+        seatNumber++;
+        PlayerSeatsUI.Instance.availableSeatNumber = seatNumber;
+    }
+    
+    [ClientRpc()]
+    private void TakeSeatClientRpc(int seatNumber, ulong clientId)
+    {
+        Debug.Log("Take Seat Client RPC Executed before if");
+        if (NetworkManager.Singleton.LocalClientId != clientId)
+            return;
+        Debug.Log("Code executed on specific client seat Number found: " + seatNumber);
+        PlayerSeatsUI.Instance.OnPlayerClickTakeButton(seatNumber);
+    }
+
     [ServerRpc]
     private void SetIsPlayingValueServerRpc(bool value)
     {
@@ -389,14 +412,28 @@ public class Game : NetworkBehaviour
     }
 
     [ClientRpc]
+    private void UpdateRoundNumberClientRpc(int newRoundNumber)
+    {
+        roundNumber = newRoundNumber;
+
+        BuyinPannel.Instance.ContinueBuyIn();
+        if(roundNumber >= 12)
+        {
+            BuyinPannel.Instance.StopBuyIn();
+        }
+    }
+
+[ClientRpc]
     private void EndDealClientRpc(WinnerInfo[] winnerInfo)
     {
-        if (IsServer == true)
-        {
-            SetCurrentGameStageValueServerRpc(GameStage.Empty);
-            SetIsPlayingValueServerRpc(false);
-            SetCodedBoardCardsValueServerRpc(string.Empty);
-        }
+    if (IsServer == true)
+    {
+        roundNumber++;
+        SetCurrentGameStageValueServerRpc(GameStage.Empty);
+        SetIsPlayingValueServerRpc(false);
+        SetCodedBoardCardsValueServerRpc(string.Empty);
+        UpdateRoundNumberClientRpc(roundNumber);
+    }
 
         if (_stageCoroutine != null)
         {

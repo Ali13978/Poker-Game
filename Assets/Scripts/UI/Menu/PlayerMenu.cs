@@ -135,7 +135,8 @@ public class PlayerMenu : MonoBehaviour, INetworkSerializeByMemcpy
 
     private void SavePlayerData()
     {
-        PlayerData playerData = new(_nickNameInputField.text, (uint)_stackSlider.value);
+        PlayerData _playerdata = _saveLoadSystem.Load<PlayerData>();
+        PlayerData playerData = new PlayerData(_nickNameInputField.text, _playerdata.Money, (uint)_stackSlider.value);
         _saveLoadSystem.Save(playerData);
     }
 

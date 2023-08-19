@@ -19,7 +19,7 @@ public class ReadonlySaveLoadSystemFactory : MonoBehaviour
         {
             Destroy(gameObject);
         }
-
+        
         SetChosen();
     }
 

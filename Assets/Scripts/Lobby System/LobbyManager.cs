@@ -44,7 +44,7 @@ public class LobbyManager : MonoBehaviour
         HandleLobbyPollsForUpdates();
     }
 
-    public async void CreateLobby(bool _isPrivate, Action lobbyCreationSucessful, Action LobbyCreationFailed)
+    public async void CreateLobby(bool _isPrivate, Action lobbyCreationSucessful, Action LobbyCreationFailed, bool isTornument)
     {
         try
         {
@@ -54,7 +54,11 @@ public class LobbyManager : MonoBehaviour
             options.Player = GetPlayer();
             options.Data = new Dictionary<string, DataObject>
             {
-                {"RelayCode", new DataObject(DataObject.VisibilityOptions.Member, null) }
+                {"RelayCode", new DataObject(DataObject.VisibilityOptions.Member, null) },
+                {
+                    "IsTornument",
+                    new DataObject( visibility: DataObject.VisibilityOptions.Public, value: isTornument.ToString(), index: DataObject.IndexOptions.S1)
+                }
             };
 
             string lobbyName = UnityEngine.Random.Range(1, 1000000).ToString();
@@ -90,12 +94,16 @@ public class LobbyManager : MonoBehaviour
         }
     }
 
-    public async void QuickJoinLobby(Action QuickJoinSucessful, Action QuickJoinFailed)
+    public async void QuickJoinLobby(Action QuickJoinSucessful, Action QuickJoinFailed, bool isTornument)
     {
         try
         {
             QuickJoinLobbyOptions options = new QuickJoinLobbyOptions();
             options.Player = GetPlayer();
+            options.Filter = new List<QueryFilter>
+            {
+                new QueryFilter(QueryFilter.FieldOptions.S1, op: QueryFilter.OpOptions.EQ, value: isTornument.ToString())
+            };
 
             joinedLobby = await LobbyService.Instance.QuickJoinLobbyAsync(options);
             QuickJoinSucessful?.Invoke();
@@ -103,7 +111,7 @@ public class LobbyManager : MonoBehaviour
         catch(LobbyServiceException e)
         {
             Debug.Log(e);
-            CreateLobby(false, QuickJoinSucessful, QuickJoinFailed);
+            CreateLobby(false, QuickJoinSucessful, QuickJoinFailed, isTornument);
         }
     }
 

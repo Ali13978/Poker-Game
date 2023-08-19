@@ -1,11 +1,14 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using Unity.Services.Core;
 using Unity.Services.Lobbies;
 using Unity.Services.Lobbies.Models;
+using Unity.Netcode;
 
-public class UI : MonoBehaviour
+public class UI : NetworkBehaviour
 {
+
     private async void Start()
     {
         await UnityServices.InitializeAsync();
@@ -34,5 +37,7 @@ public class UI : MonoBehaviour
         }
 
         LobbyManager.instance.LeaveLobby(() => { }, () => { });
+        
+        Game.Instance.TakeSeatServerRpc();
     }
 }   

@@ -97,6 +97,11 @@ public class Player : NetworkBehaviour
         }
     }
 
+    public void SetStack(uint value)
+    {
+        _stack.Value = value;
+    }
+
     public void Leave()
     {
         SetSeatServerRpc(NullSeatNumber);

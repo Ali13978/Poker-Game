@@ -13,11 +13,11 @@ public class QFSWConsoleCommands : MonoBehaviour
     }
 
     [Command]
-    private void GiveChips(uint chips)
+    private void GiveChipsAndMoney(uint money, uint chips)
     {
         PlayerData playerData = _saveLoadSystem.Load<PlayerData>();
 
-        PlayerData newPlayerData = new PlayerData(playerData.NickName, playerData.Stack + chips);
+        PlayerData newPlayerData = new PlayerData(playerData.NickName, playerData.Money + money, playerData.Stack + chips);
 
         _saveLoadSystem.Save(newPlayerData);
     }

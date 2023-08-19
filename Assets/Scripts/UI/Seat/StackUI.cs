@@ -32,7 +32,7 @@ public class StackUI : MonoBehaviour
         _saveLoadSystem = ReadonlySaveLoadSystemFactory.Instance.Get();
         PlayerData playerData = _saveLoadSystem.Load<PlayerData>();
 
-        PlayerData data = new PlayerData(playerData.NickName, newValue);
+        PlayerData data = new PlayerData(playerData.NickName, playerData.Money, newValue);
         _saveLoadSystem.Save(data);
     }
 

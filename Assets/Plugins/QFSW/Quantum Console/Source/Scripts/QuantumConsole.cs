@@ -197,7 +197,7 @@ namespace QFSW.QC
                 }
             }
         }
-
+        
         protected virtual void Update()
         {
             if (!IsActive)
@@ -1007,6 +1007,7 @@ namespace QFSW.QC
 
         private void Awake()
         {
+            DontDestroyOnLoad(gameObject);
             InitializeLogging();
         }
 
