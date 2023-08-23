@@ -5,6 +5,7 @@ using Unity.Services.Core;
 using Unity.Services.Lobbies;
 using Unity.Services.Lobbies.Models;
 using Unity.Netcode;
+using static AliScripts.AliExtras;
 
 public class UI : NetworkBehaviour
 {
@@ -16,12 +17,12 @@ public class UI : NetworkBehaviour
         IEnumerable<string> connectionData = NetworkConnectorHandler.CurrentConnector.ConnectionData;
         string relayCode = string.Join(":", connectionData);
 
+        Lobby lobby = LobbyManager.instance.GetJoinedLobby();
+
         if (LobbyManager.instance.IsHost())
         {
             try
             {
-                Lobby lobby = LobbyManager.instance.GetJoinedLobby();
-
                 UpdateLobbyOptions options = new UpdateLobbyOptions();
                 options.Data = new Dictionary<string, DataObject>
             {
@@ -35,6 +36,9 @@ public class UI : NetworkBehaviour
                 Debug.Log(e);
             }
         }
+
+        Game.Instance.isTornument = GetBoolFromString(lobby.Data["IsTornument"].Value);
+        Game.Instance.isTornumentA = GetBoolFromString(lobby.Data["IsTornumentA"].Value);
 
         LobbyManager.instance.LeaveLobby(() => { }, () => { });
         

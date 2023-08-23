@@ -895,10 +895,10 @@ PlayerSettings:
   apiCompatibilityLevel: 6
   activeInputHandler: 0
   windowsGamepadBackendHint: 0
-  cloudProjectId: 00cfe837-60df-4acf-8b14-989b08d9d2dc
+  cloudProjectId: 90b6ab90-5535-4107-860a-8594a6486216
   framebufferDepthMemorylessMode: 0
   qualitySettingsNames: []
-  projectName: Poker Game
+  projectName: PokerMultiplayer
   organizationId: aliwebconsultant
   cloudEnabled: 0
   legacyClampBlendShapeWeights: 0

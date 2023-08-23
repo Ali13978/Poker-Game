@@ -9,7 +9,11 @@ using Unity.Services.Authentication;
 using Unity.Services.Relay;
 using Unity.Services.Relay.Http;
 using Unity.Services.Core;
+using Unity.Services.Leaderboards;
+using Unity.Services.Leaderboards.Exceptions;
+using Unity.Services.Leaderboards.Models;
 using SFB;
+using static AliScripts.AliExtras;
 #if UNITY_ANDROID || UNITY_IOS
 using NativeFilePickerNamespace;
 #endif
@@ -32,7 +36,8 @@ public class MainMenuUI : MonoBehaviour
         mainMenuPannel,
         playerProfilePannel,
         lobbyPannel,
-        startGamePannel
+        startGamePannel,
+        tournamentLbPannel
     };
 
     private enum MenuPannelType
@@ -73,10 +78,12 @@ public class MainMenuUI : MonoBehaviour
 
     [Header("Tournaments Pannel")]
     [SerializeField] Button tournamentABtn;
+    [SerializeField] Button tournamentAInfoBtn;
     [SerializeField] TMP_Text tournamentABtnText;
     [SerializeField] TMP_Text tournamentACurrentStageText;
     [SerializeField] uint TournamentAEntryFee;
     [SerializeField] Button tournamentBBtn;
+    [SerializeField] Button tournamentBInfoBtn;
     [SerializeField] TMP_Text tournamentBBtnText;
     [SerializeField] TMP_Text tournamentBCurrentStageText;
     [SerializeField] uint TournamentBEntryFee;
@@ -99,6 +106,10 @@ public class MainMenuUI : MonoBehaviour
     [SerializeField] Button profileEditPlayerNameBtn;
     [SerializeField] TMP_Text profilePlayerIdText;
     [SerializeField] Button profileBackBtn;
+    [SerializeField] TMP_Text profileWinRatioText;
+    [SerializeField] TMP_Text profileTotalHandsText;
+    [SerializeField] TMP_Text profileWinHandsText;
+    [SerializeField] TMP_Text profileLoseHandsText;
     private Action enablePlayerProfilePannelAction;
 
     [Header("Lobby-Pannel")]
@@ -117,6 +128,15 @@ public class MainMenuUI : MonoBehaviour
     private Action enableLobbyPannelAction;
     public Action<string> joinRelayAction;
     string relayCode = null;
+
+    [Header("Tournament Leaderboard Pannel")]
+    [SerializeField] GameObject tournamentLbPannel;
+    [SerializeField] TMP_Text tournamentLbPannelHeadingText;
+    [SerializeField] GameObject tournamentLbPannelPlayersHolder;
+    [SerializeField] GameObject tournamentLbPlayerPrefab;
+    [SerializeField] Button tournamentBackBtn;
+
+    Action<bool> enableTournamentLbPannelAction;
 
     #region login-Pannel
 
@@ -258,7 +278,8 @@ public class MainMenuUI : MonoBehaviour
             { PanelType.mainMenuPannel, mainMenuPannel },
             { PanelType.playerProfilePannel, playerProfilePannel },
             { PanelType.lobbyPannel, lobbyPannel },
-            { PanelType.startGamePannel, startGamePannel}
+            { PanelType.startGamePannel, startGamePannel},
+            {PanelType.tournamentLbPannel, tournamentLbPannel }
         };
 
         menuPanelsDictionary = new Dictionary<MenuPannelType, GameObject>
@@ -300,7 +321,7 @@ public class MainMenuUI : MonoBehaviour
             }, () => {
                 EnablePannel(PanelType.mainMenuPannel, enableMainMenuAction);
                 EnableMenuPannel(MenuPannelType.mainPannel, () => { });
-            }, true);
+            }, false, false);
         });
 
         ProfileBtn.onClick.AddListener(() =>
@@ -337,7 +358,7 @@ public class MainMenuUI : MonoBehaviour
             }, () => {
                 EnablePannel(PanelType.mainMenuPannel, enableMainMenuAction);
                 EnableMenuPannel(MenuPannelType.mainPannel, () => { });
-            }, false);
+            }, false, false);
         });
 
         joinRoomBtn.onClick.AddListener(() =>
@@ -444,6 +465,25 @@ public class MainMenuUI : MonoBehaviour
                 EnablePannel(PanelType.lobbyPannel, enableLobbyPannelAction);
             });
         });
+
+        tournamentAInfoBtn.onClick.AddListener(() => {
+            enableTournamentLbPannel(true);
+        });
+
+        tournamentBInfoBtn.onClick.AddListener(() => {
+            enableTournamentLbPannel(false);
+        });
+
+        tournamentBackBtn.onClick.AddListener(() => {
+            EnablePannel(PanelType.mainMenuPannel, enableMainMenuAction);
+        });
+    }
+
+    private void enableTournamentLbPannel(bool isTournamentA)
+    {
+        TurnOffAllPannels();
+        enableTournamentLbPannelAction?.Invoke(isTournamentA);
+        tournamentLbPannel.SetActive(true);
     }
 
     private void Update()
@@ -497,7 +537,7 @@ public class MainMenuUI : MonoBehaviour
 
     private void InitializeActions()
     {
-        enableMainMenuAction = () =>
+        enableMainMenuAction = async () =>
         {
             PlayerData playerData = _saveLoadSystem.Load<PlayerData>();
             PlayerAvatarData playerAvatarData = _saveLoadSystem.Load<PlayerAvatarData>();
@@ -506,34 +546,7 @@ public class MainMenuUI : MonoBehaviour
             playerMoneyText.text = playerData.Money.ToString();
             playerImage.sprite = BytesToSprite(playerAvatarData.CodedValue);
             playerNameText.text = playerData.NickName;
-
-            //tornuments stuff
-            //TournamentAData tournamentAData = _saveLoadSystem.Load<TournamentAData>();
-            //TournamentBData tournamentBData = _saveLoadSystem.Load<TournamentBData>();
-            //if (tournamentAData == null)
-            //    tournamentAData = new TournamentAData(TournamentAData.tournamentStage.QuarterFinal, false);
-            //if (tournamentBData == null)
-            //    tournamentBData = new TournamentBData(TournamentBData.tournamentStage.QuarterFinal, false);
-
-            //if (tournamentAData.isStarted)
-            //{
-            //    tournamentABtnText.text = "Continue";
-            //    tournamentACurrentStageText.text = tournamentAData.CurrentStage.ToString();
-
-            //    tournamentABtn.onClick.AddListener(() => {
-
-            //        EnablePannel(PanelType.loadingPannel, () => { });
-
-            //        LobbyManager.instance.QuickJoinLobby(() => {
-            //            EnablePannel(PanelType.lobbyPannel, enableLobbyPannelAction);
-            //        }, () => {
-            //            EnablePannel(PanelType.mainMenuPannel, enableMainMenuAction);
-            //            EnableMenuPannel(MenuPannelType.mainPannel, () => { });
-            //        });
-            //    });
-            //}
-            //else
-            //{
+            
             tournamentABtnText.text = "Pay n Play";
             tournamentACurrentStageText.text = "Join Now";
             tournamentABtn.onClick.AddListener(() =>
@@ -551,39 +564,15 @@ public class MainMenuUI : MonoBehaviour
                     _saveLoadSystem.Save(data);
                     LobbyManager.instance.QuickJoinLobby(() =>
                     {
-                        //TournamentAData tournamentData = new TournamentAData(TournamentAData.tournamentStage.QuarterFinal, true);
-                        //_saveLoadSystem.Save(tournamentData);
-
                         EnablePannel(PanelType.lobbyPannel, enableLobbyPannelAction);
                     }, () =>
                     {
-                        //TournamentAData tournamentData = new TournamentAData(TournamentAData.tournamentStage.QuarterFinal, false);
-                        //_saveLoadSystem.Save(tournamentData);
                         EnablePannel(PanelType.mainMenuPannel, enableMainMenuAction);
                         EnableMenuPannel(MenuPannelType.mainPannel, () => { });
-                    }, true);
+                    }, true, true);
                 }
             });
-            //}
 
-            //if (tournamentBData.isStarted)
-            //{
-            //    tournamentBBtnText.text = "Continue";
-            //    tournamentBCurrentStageText.text = tournamentBData.CurrentStage.ToString();
-            //    tournamentBBtn.onClick.AddListener(() => {
-
-            //        EnablePannel(PanelType.loadingPannel, () => { });
-
-            //        LobbyManager.instance.QuickJoinLobby(() => {
-            //            EnablePannel(PanelType.lobbyPannel, enableLobbyPannelAction);
-            //        }, () => {
-            //            EnablePannel(PanelType.mainMenuPannel, enableMainMenuAction);
-            //            EnableMenuPannel(MenuPannelType.mainPannel, () => { });
-            //        });
-            //    });
-            //}
-            //else
-            //{
             tournamentBBtnText.text = "Pay n Play";
             tournamentBCurrentStageText.text = "Join Now";
             tournamentBBtn.onClick.AddListener(() =>
@@ -600,20 +589,16 @@ public class MainMenuUI : MonoBehaviour
                     _saveLoadSystem.Save(data);
                     LobbyManager.instance.QuickJoinLobby(() =>
                     {
-                        //TournamentBData tournamentData = new TournamentBData(TournamentBData.tournamentStage.QuarterFinal, true);
-                        //_saveLoadSystem.Save(tournamentData);
-
                         EnablePannel(PanelType.lobbyPannel, enableLobbyPannelAction);
                     }, () =>
                     {
-                        //TournamentBData tournamentData = new TournamentBData(TournamentBData.tournamentStage.QuarterFinal, false);
-                        //_saveLoadSystem.Save(tournamentData);
                         EnablePannel(PanelType.mainMenuPannel, enableMainMenuAction);
                         EnableMenuPannel(MenuPannelType.mainPannel, () => { });
-                    }, true);
+                    }, true, false);
                 }
             });
-            //}
+
+            await AuthenticationService.Instance.UpdatePlayerNameAsync(playerData.NickName);
         };
 
         enablePlayerProfilePannelAction = () => {
@@ -624,6 +609,24 @@ public class MainMenuUI : MonoBehaviour
             profilePlayerNameText.text = playerData.NickName;
             profilePlayerIdText.text = AuthenticationService.Instance.PlayerId;
             profilePlayerImage.sprite = BytesToSprite(playerAvatarData.CodedValue);
+
+            float _winRatio = 0f;
+            int _totalHands = 0;
+            int _winHands = 0;
+
+            _totalHands = PlayerPrefs.GetInt("Total Hands", 0);
+            _winHands = PlayerPrefs.GetInt("Win Hands", 0);
+
+            if (_totalHands != 0)
+                _winRatio = (float)_winHands / (float)_totalHands;
+            else
+                _winRatio = 0.00f;
+            _winRatio *= 100f;
+
+            profileWinRatioText.text = "" + _winRatio.ToString("F2") + "%";
+            profileTotalHandsText.text = "" + _totalHands;
+            profileWinHandsText.text = "" + _winHands;
+            profileLoseHandsText.text = "" + (_totalHands - _winHands);
 
             Debug.Log(AuthenticationService.Instance.PlayerInfo);
         };
@@ -736,6 +739,21 @@ public class MainMenuUI : MonoBehaviour
 
         };
 
+        enableTournamentLbPannelAction = (isTournamentA) => {
+            DestroyChildren(tournamentLbPannelPlayersHolder);
+
+            if (isTournamentA)
+            {
+                tournamentLbPannelHeadingText.text = "Tournament Daily Special";
+                LeaderboardManager.instance.UpdateLeaderboard("Tournament_A_Leaderboard", tournamentLbPannelPlayersHolder, tournamentLbPlayerPrefab);
+            }
+            else
+            {
+                tournamentLbPannelHeadingText.text = "Tournament Daily";
+                LeaderboardManager.instance.UpdateLeaderboard("Tournament_B_Leaderboard", tournamentLbPannelPlayersHolder, tournamentLbPlayerPrefab);
+            }
+        };
+
         lobbyPlayersEditedAction = () => {
             Unity.Services.Lobbies.Models.Lobby joinedLobby = LobbyManager.instance.GetJoinedLobby();
             bool isTornumentLobby = (joinedLobby.Data["IsTornument"].Value == "True") ? true : false;
@@ -838,6 +856,7 @@ public class MainMenuUI : MonoBehaviour
         playerProfilePannel.SetActive(false);
         lobbyPannel.SetActive(false);
         startGamePannel.SetActive(false);
+        tournamentLbPannel.SetActive(false);
     }
 
     private void TurnOffMenuPannels()
@@ -867,5 +886,6 @@ public class MainMenuUI : MonoBehaviour
         GameObject panel = menuPanelsDictionary[pannel];
         panel.SetActive(true);
         onEnableAction?.Invoke();
+        
     }
 }

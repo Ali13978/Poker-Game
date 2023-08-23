@@ -8,10 +8,7 @@ public class LoginManager : MonoBehaviour
 {
     private async void Start()
     {
-        InitializationOptions options = new InitializationOptions();
-        options.SetProfile(Random.Range(1, 10000).ToString());
-
-        await UnityServices.InitializeAsync(options);
+        await UnityServices.InitializeAsync();
         AuthenticationService.Instance.SignedIn +=()=> {
             StartCoroutine(MainMenuUI.instance.StartLoginLoading());
         };

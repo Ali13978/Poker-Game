@@ -44,7 +44,7 @@ public class LobbyManager : MonoBehaviour
         HandleLobbyPollsForUpdates();
     }
 
-    public async void CreateLobby(bool _isPrivate, Action lobbyCreationSucessful, Action LobbyCreationFailed, bool isTornument)
+    public async void CreateLobby(bool _isPrivate, Action lobbyCreationSucessful, Action LobbyCreationFailed, bool isTornument, bool isTornumentA)
     {
         try
         {
@@ -58,6 +58,10 @@ public class LobbyManager : MonoBehaviour
                 {
                     "IsTornument",
                     new DataObject( visibility: DataObject.VisibilityOptions.Public, value: isTornument.ToString(), index: DataObject.IndexOptions.S1)
+                },
+                {
+                    "IsTornumentA",
+                    new DataObject( visibility: DataObject.VisibilityOptions.Public, value: isTornumentA.ToString(), index: DataObject.IndexOptions.S1)
                 }
             };
 
@@ -94,7 +98,7 @@ public class LobbyManager : MonoBehaviour
         }
     }
 
-    public async void QuickJoinLobby(Action QuickJoinSucessful, Action QuickJoinFailed, bool isTornument)
+    public async void QuickJoinLobby(Action QuickJoinSucessful, Action QuickJoinFailed, bool isTornument, bool isTornumentA)
     {
         try
         {
@@ -111,7 +115,7 @@ public class LobbyManager : MonoBehaviour
         catch(LobbyServiceException e)
         {
             Debug.Log(e);
-            CreateLobby(false, QuickJoinSucessful, QuickJoinFailed, isTornument);
+            CreateLobby(false, QuickJoinSucessful, QuickJoinFailed, isTornument, isTornumentA);
         }
     }
 
@@ -122,7 +126,7 @@ public class LobbyManager : MonoBehaviour
         Unity.Services.Lobbies.Models.Player player = new Unity.Services.Lobbies.Models.Player {
             Data = new Dictionary<string, PlayerDataObject>
             {
-                {"PlayerName", new PlayerDataObject(PlayerDataObject.VisibilityOptions.Member, playerData.NickName) },
+                {"PlayerName", new PlayerDataObject(PlayerDataObject.VisibilityOptions.Member, playerData.NickName) }
             }
         };
 

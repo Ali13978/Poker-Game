@@ -5,6 +5,11 @@ using System.Linq;
 using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
+using Unity.Services.Leaderboards.Exceptions;
+using Newtonsoft.Json;
+using Unity.Services.Leaderboards;
+using Unity.Services.Core;
+using System.Threading.Tasks;
 
 public class Game : NetworkBehaviour
 {
@@ -49,11 +54,17 @@ public class Game : NetworkBehaviour
     // This fields is for CLIENTS. It`s tracking when Server/Host calls the 'EndStageCoroutineClientRpc' so when it`s called sets true and routine ends.
     private readonly NetworkVariable<bool> _isStageCoroutineOver = new();
 
-    private void Awake()
+    public bool isTornument;
+    public bool isTornumentA;
+    private string playerScore = "";
+
+    private async void Awake()
     {
         if (Instance == null)
         {
             Instance = this;
+
+            await UnityServices.InitializeAsync();
         }
         else
         {
@@ -423,17 +434,102 @@ public class Game : NetworkBehaviour
         }
     }
 
+private async void AddScoreOnLeaderboard(string leaderboardId, int score)
+{
+    var scoreResponse = await LeaderboardsService.Instance.AddPlayerScoreAsync(leaderboardId, score);
+}
+
+private async void GetPlayerScoreLb(string leaderboardId)
+{
+    playerScore = await LeaderboardManager.instance.GetPlayerScore(leaderboardId);
+}
+
 [ClientRpc]
     private void EndDealClientRpc(WinnerInfo[] winnerInfo)
     {
-    if (IsServer == true)
-    {
-        roundNumber++;
-        SetCurrentGameStageValueServerRpc(GameStage.Empty);
-        SetIsPlayingValueServerRpc(false);
-        SetCodedBoardCardsValueServerRpc(string.Empty);
-        UpdateRoundNumberClientRpc(roundNumber);
-    }
+        ulong localPlayerId = PlayerSeats.Instance.LocalPlayer.OwnerClientId;
+        bool isWinner = false;
+        
+
+        PlayerPrefs.SetInt("Total Hands", PlayerPrefs.GetInt("Total Hands") + 1);
+
+        foreach (WinnerInfo info in winnerInfo)
+        {
+            if (info.WinnerId == localPlayerId)
+            {
+                isWinner = true;
+            }
+        }
+
+        if (isWinner)
+        {
+            PlayerPrefs.SetInt("Win Hands", PlayerPrefs.GetInt("Win Hands") + 1);
+            if(isTornument)
+            {
+                string leaderboardId = "";
+                if (isTornumentA)
+                {
+                    leaderboardId = "Tournament_A_Leaderboard";
+                }
+                else
+                {
+                    leaderboardId = "Tournament_B_Leaderboard";
+                }
+
+                GetPlayerScoreLb(leaderboardId);
+
+                if (!string.IsNullOrEmpty(playerScore))
+                {
+                    int score = int.Parse(playerScore);
+
+                    score++;
+                    AddScoreOnLeaderboard(leaderboardId, score);
+                }
+                else
+                {
+                    AddScoreOnLeaderboard(leaderboardId, 1);
+                }
+            }
+        }
+        else
+        {
+            Debug.Log("I lost this hand :(");
+            if(isTornument)
+            {
+                string leaderboardId = "";
+                if (isTornumentA)
+                {
+                    leaderboardId = "Tournament_A_Leaderboard";
+                }
+                else
+                {
+                    leaderboardId = "Tournament_B_Leaderboard";
+                }
+
+                GetPlayerScoreLb(leaderboardId);
+
+                if (!string.IsNullOrEmpty(playerScore))
+                {
+                    int score = int.Parse(playerScore);
+
+                    score--;
+                    AddScoreOnLeaderboard(leaderboardId, score);
+                }
+                else
+                {
+                    AddScoreOnLeaderboard(leaderboardId, -1);
+                }
+            }
+        }
+
+        if (IsServer == true)
+        {
+            roundNumber++;
+            SetCurrentGameStageValueServerRpc(GameStage.Empty);
+            SetIsPlayingValueServerRpc(false);
+            SetCodedBoardCardsValueServerRpc(string.Empty);
+            UpdateRoundNumberClientRpc(roundNumber);
+        }
 
         if (_stageCoroutine != null)
         {
