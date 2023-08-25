@@ -5,6 +5,12 @@ using UnityEngine;
 
 public class DailyRewardsManager : MonoBehaviour
 {
+    public static DailyRewardsManager instance;
+    private void Awake()
+    {
+        instance = this;
+    }
+
     private DateTime lastLoginDate;
     private int daysSinceLastLogin;
 
@@ -13,27 +19,34 @@ public class DailyRewardsManager : MonoBehaviour
     private void Start()
     {
         _saveLoadSystem = ReadonlySaveLoadSystemFactory.Instance.Get();
+    }
 
-        // Load the last login date from player prefs or other storage
-        string lastLoginDateString = PlayerPrefs.GetString("LastLoginDate");
-        if (!string.IsNullOrEmpty(lastLoginDateString))
+    public void CheckForDailyRewards(Action dailyRewardAvailableAction)
+    {
+        if (!PlayerPrefs.HasKey("LastLoginDate"))
+            dailyRewardAvailableAction?.Invoke();
+
+        else
         {
-            lastLoginDate = DateTime.Parse(lastLoginDateString);
-            TimeSpan timeSinceLastLogin = DateTime.Now - lastLoginDate;
-            daysSinceLastLogin = timeSinceLastLogin.Days;
-
-            // Check if it's a new day and grant reward
-            if (daysSinceLastLogin >= 1)
+            string lastLoginDateString = PlayerPrefs.GetString("LastLoginDate");
+            if (!string.IsNullOrEmpty(lastLoginDateString))
             {
-                GrantDailyReward();
+                lastLoginDate = DateTime.Parse(lastLoginDateString);
+                TimeSpan timeSinceLastLogin = DateTime.Now - lastLoginDate;
+                daysSinceLastLogin = timeSinceLastLogin.Days;
+
+                // Check if it's a new day and grant reward
+                if (daysSinceLastLogin >= 1)
+                {
+                    dailyRewardAvailableAction?.Invoke();
+                }
             }
         }
-
         // Update the last login date
         PlayerPrefs.SetString("LastLoginDate", DateTime.Now.ToString());
     }
 
-    private void GrantDailyReward()
+    public void GrantDailyReward()
     {
         // TODO: Add code to grant the daily reward
         Debug.Log("Award granted");

@@ -37,7 +37,8 @@ public class MainMenuUI : MonoBehaviour
         playerProfilePannel,
         lobbyPannel,
         startGamePannel,
-        tournamentLbPannel
+        tournamentLbPannel,
+        dailyRewardPannel
     };
 
     private enum MenuPannelType
@@ -137,6 +138,10 @@ public class MainMenuUI : MonoBehaviour
     [SerializeField] Button tournamentBackBtn;
 
     Action<bool> enableTournamentLbPannelAction;
+
+    [Header("Daily reward pannel")]
+    [SerializeField] GameObject dailyRewardPannel;
+    [SerializeField] Button dailyRewardOkayBtn;
 
     #region login-Pannel
 
@@ -279,7 +284,8 @@ public class MainMenuUI : MonoBehaviour
             { PanelType.playerProfilePannel, playerProfilePannel },
             { PanelType.lobbyPannel, lobbyPannel },
             { PanelType.startGamePannel, startGamePannel},
-            {PanelType.tournamentLbPannel, tournamentLbPannel }
+            {PanelType.tournamentLbPannel, tournamentLbPannel },
+            {PanelType.dailyRewardPannel, dailyRewardPannel }
         };
 
         menuPanelsDictionary = new Dictionary<MenuPannelType, GameObject>
@@ -477,6 +483,12 @@ public class MainMenuUI : MonoBehaviour
         tournamentBackBtn.onClick.AddListener(() => {
             EnablePannel(PanelType.mainMenuPannel, enableMainMenuAction);
         });
+
+        //dailyReward pannel
+        dailyRewardOkayBtn.onClick.AddListener(() => {
+            DailyRewardsManager.instance.GrantDailyReward();
+            EnablePannel(PanelType.mainMenuPannel, enableMainMenuAction);
+        });
     }
 
     private void enableTournamentLbPannel(bool isTournamentA)
@@ -546,6 +558,10 @@ public class MainMenuUI : MonoBehaviour
             playerMoneyText.text = playerData.Money.ToString();
             playerImage.sprite = BytesToSprite(playerAvatarData.CodedValue);
             playerNameText.text = playerData.NickName;
+
+            DailyRewardsManager.instance.CheckForDailyRewards(()=> {
+                EnablePannel(PanelType.dailyRewardPannel, () => { });
+            });
             
             tournamentABtnText.text = "Pay n Play";
             tournamentACurrentStageText.text = "Join Now";
@@ -856,6 +872,7 @@ public class MainMenuUI : MonoBehaviour
         playerProfilePannel.SetActive(false);
         lobbyPannel.SetActive(false);
         startGamePannel.SetActive(false);
+        dailyRewardPannel.SetActive(false);
         tournamentLbPannel.SetActive(false);
     }
 
@@ -887,5 +904,10 @@ public class MainMenuUI : MonoBehaviour
         panel.SetActive(true);
         onEnableAction?.Invoke();
         
+    }
+
+    public void EnableDailyRewardPannel()
+    {
+
     }
 }
