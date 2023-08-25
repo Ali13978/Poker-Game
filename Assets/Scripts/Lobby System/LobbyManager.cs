@@ -57,11 +57,11 @@ public class LobbyManager : MonoBehaviour
                 {"RelayCode", new DataObject(DataObject.VisibilityOptions.Member, null) },
                 {
                     "IsTornument",
-                    new DataObject( visibility: DataObject.VisibilityOptions.Public, value: isTornument.ToString(), index: DataObject.IndexOptions.S1)
+                    new DataObject( visibility: DataObject.VisibilityOptions.Public, isTornument.ToString(), index: DataObject.IndexOptions.S1)
                 },
                 {
                     "IsTornumentA",
-                    new DataObject( visibility: DataObject.VisibilityOptions.Public, value: isTornumentA.ToString(), index: DataObject.IndexOptions.S1)
+                    new DataObject( visibility: DataObject.VisibilityOptions.Public, isTornumentA.ToString(), index: DataObject.IndexOptions.S2)
                 }
             };
 
