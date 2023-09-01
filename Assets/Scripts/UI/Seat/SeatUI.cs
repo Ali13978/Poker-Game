@@ -28,6 +28,8 @@ public class SeatUI : MonoBehaviour
 
     private static readonly int LoadingAvatar = Animator.StringToHash("LoadingAvatar");
     private static readonly int Empty = Animator.StringToHash("Empty");
+    
+    private static Game Game => Game.Instance;
 
     public void EnableLoadingImage()
     {
@@ -43,5 +45,21 @@ public class SeatUI : MonoBehaviour
         
         _animator.ResetAllTriggers();
         _animator.SetTrigger(Empty);
+    }
+
+    private void OnEnable()
+    {
+        Game.EndDealEvent += OnEndDeal;
+    }
+
+    private void OnDisable()
+    {
+        Game.EndDealEvent -= OnEndDeal;
+    }
+
+    private void OnEndDeal(WinnerInfo[] winnerInfo)
+    {
+        ShowSelectedOption.SetActive(false);
+        SelectedOptionText.text = "";
     }
 }

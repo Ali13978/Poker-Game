@@ -397,7 +397,7 @@ public class MainMenuUI : MonoBehaviour
         });
 
         //Set Name Pannel
-        setNameDoneBtn.onClick.AddListener(() =>
+        setNameDoneBtn.onClick.AddListener(async () =>
         {
             Debug.Log(setNameInputField.text);
             if (string.IsNullOrEmpty(setNameInputField.text))
@@ -408,12 +408,12 @@ public class MainMenuUI : MonoBehaviour
             {
                 _playerData.SetDefaultValues();
             }
-            PlayerPrefs.SetString("playerName", setNameInputField.text);
             PlayerData playerData = new PlayerData(setNameInputField.text, _playerData.Money, _playerData.Stack);
             _saveLoadSystem.Save(playerData);
 
             EnablePannel(PanelType.mainMenuPannel, enableMainMenuAction);
             EnableMenuPannel(MenuPannelType.mainPannel, () => { });
+            await AuthenticationService.Instance.UpdatePlayerNameAsync(playerData.NickName);
         });
 
         //Player Profile Pannel
@@ -549,7 +549,7 @@ public class MainMenuUI : MonoBehaviour
 
     private void InitializeActions()
     {
-        enableMainMenuAction = async () =>
+        enableMainMenuAction = () =>
         {
             PlayerData playerData = _saveLoadSystem.Load<PlayerData>();
             PlayerAvatarData playerAvatarData = _saveLoadSystem.Load<PlayerAvatarData>();
@@ -629,7 +629,6 @@ public class MainMenuUI : MonoBehaviour
                 }
             });
 
-            await AuthenticationService.Instance.UpdatePlayerNameAsync(playerData.NickName);
         };
 
         enablePlayerProfilePannelAction = () => {
