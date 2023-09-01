@@ -574,28 +574,28 @@ private async void GetPlayerScoreLb(string leaderboardId)
         GameStageOverEvent?.Invoke(GameStage.Showdown);
     }
 
-    //[ClientRpc]
-    //private void ForceLostPlayerLeaveClientRpc()
-    //{
-    //    Player me = new Player();
-    //    int[] turnSequence = _boardButton.GetShowdownTurnSequence();
+//[ClientRpc]
+//private void ForceLostPlayerLeaveClientRpc()
+//{
+//    Player me = new Player();
+//    int[] turnSequence = _boardButton.GetShowdownTurnSequence();
 
-    //    for (var i = 0; i < turnSequence.Length; i++)
-    //    {
-    //        Player player = PlayerSeats.Players[turnSequence[i]];
+//    for (var i = 0; i < turnSequence.Length; i++)
+//    {
+//        Player player = PlayerSeats.Players[turnSequence[i]];
 
-    //        if (player.OwnerClientId == OwnerClientId)
-    //        {
-    //            me = player;
-    //            break;
-    //        }
-    //    }
+//        if (player.OwnerClientId == OwnerClientId)
+//        {
+//            me = player;
+//            break;
+//        }
+//    }
 
-    //    if(me.Stack <= 0)
-    //    {
-    //        me.Leave();
-    //    }
-    //}
+//    if(me.Stack <= 0)
+//    {
+//        me.Leave();
+//    }
+//}
     
 #endregion
 }

@@ -2,9 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using Unity.Netcode;
 using TMPro;
 
-public class BuyinPannel : MonoBehaviour
+public class BuyinPannel : NetworkBehaviour
 {
     public static BuyinPannel Instance;
     [SerializeField] GameObject buyinPannel;
@@ -13,6 +14,7 @@ public class BuyinPannel : MonoBehaviour
     [SerializeField] Button buyinBtn;
     [SerializeField] Button cancelBtn;
 
+    private static PlayerSeats PlayerSeats => PlayerSeats.Instance;
     private uint currentMoney;
     private ISaveLoadSystem _saveLoadSystem;
     private static PlayerSeats playerSeats => PlayerSeats.Instance;
@@ -42,13 +44,13 @@ public class BuyinPannel : MonoBehaviour
             if (currentMoney < 2)
                 return;
 
-            Player myPlayer = playerSeats.LocalPlayer;
+            Player player = PlayerSeats.Players.Find(x => x != null && x.OwnerClientId == OwnerClientId);
             currentMoney -= 2;
             
-            uint currentStack = myPlayer.Stack;
+            uint currentStack = player.Stack;
             currentStack += 1000;
             Debug.Log("Player stack: " + currentStack);
-            myPlayer.SetStack(currentStack);
+            player.SetStack(currentStack);
 
             StopBuyIn();
             buyinPannel.SetActive(false);

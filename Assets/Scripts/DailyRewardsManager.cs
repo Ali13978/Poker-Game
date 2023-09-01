@@ -9,6 +9,7 @@ public class DailyRewardsManager : MonoBehaviour
     private void Awake()
     {
         instance = this;
+        PlayerPrefs.DeleteKey("LastLoginDate");
     }
 
     private DateTime lastLoginDate;

@@ -210,4 +210,5 @@ public class PlayerSeats : MonoBehaviour
             yield return new WaitForSeconds(_connectionLostCheckInterval);
         }
     }
+    
 }

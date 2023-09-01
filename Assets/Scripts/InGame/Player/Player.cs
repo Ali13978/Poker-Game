@@ -331,6 +331,7 @@ public class Player : NetworkBehaviour
         SetIsImageReadyServerRpc(true);
     }
     
+
     public override string ToString()
     {
         return $"Nick: {_nickName.Value}, ID: {OwnerClientId}.";

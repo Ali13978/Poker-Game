@@ -19,7 +19,13 @@ public class SeatUI : MonoBehaviour
     [SerializeField] private Image _nickNameBackgroundImage;
 
     [SerializeField] private Animator _animator;
-    
+
+    public GameObject ShowSelectedOption => _showSelectedOption;
+    [SerializeField] private GameObject _showSelectedOption;
+
+    public TextMeshProUGUI SelectedOptionText => _selectedOptionText;
+    [SerializeField] private TextMeshProUGUI _selectedOptionText;
+
     private static readonly int LoadingAvatar = Animator.StringToHash("LoadingAvatar");
     private static readonly int Empty = Animator.StringToHash("Empty");
 

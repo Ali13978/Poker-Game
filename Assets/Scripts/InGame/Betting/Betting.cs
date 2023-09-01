@@ -289,6 +289,10 @@ public class Betting : NetworkBehaviour
         }
         
         Player player = PlayerSeats.Players.Find(x => x != null && x.OwnerClientId == playerId);
+        SeatUI seatUI = PlayerSeatsUI.Instance.Seats[player.SeatNumber];
+        seatUI.ShowSelectedOption.SetActive(true);
+        seatUI.SelectedOptionText.text = betAction.ToString() + betAmount;
+
         player.TryBet(betAmount);
         
         if (Game.CurrentGameStage == GameStage.River && betAction != BetAction.Call)

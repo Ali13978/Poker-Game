@@ -562,7 +562,10 @@ public class MainMenuUI : MonoBehaviour
             DailyRewardsManager.instance.CheckForDailyRewards(()=> {
                 EnablePannel(PanelType.dailyRewardPannel, () => { });
             });
-            
+
+            tournamentABtn.onClick.RemoveAllListeners();
+            tournamentBBtn.onClick.RemoveAllListeners();
+
             tournamentABtnText.text = "Pay n Play";
             tournamentACurrentStageText.text = "Join Now";
             tournamentABtn.onClick.AddListener(() =>
@@ -586,6 +589,12 @@ public class MainMenuUI : MonoBehaviour
                         EnablePannel(PanelType.mainMenuPannel, enableMainMenuAction);
                         EnableMenuPannel(MenuPannelType.mainPannel, () => { });
                     }, true, true);
+                }
+
+                else
+                {
+                    MessagePopup.instance.SetValues("Error", "Not enough chips to enter tornument", "Okay");
+                    MessagePopup.instance.gameObject.SetActive(true);
                 }
             });
 
@@ -611,6 +620,12 @@ public class MainMenuUI : MonoBehaviour
                         EnablePannel(PanelType.mainMenuPannel, enableMainMenuAction);
                         EnableMenuPannel(MenuPannelType.mainPannel, () => { });
                     }, true, false);
+                }
+
+                else
+                {
+                    MessagePopup.instance.SetValues("Error", "Not enough chips to enter tornument", "Okay");
+                    MessagePopup.instance.gameObject.SetActive(true);
                 }
             });
 
