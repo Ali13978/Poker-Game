@@ -8,6 +8,9 @@ public class SeatEffectsUI : MonoBehaviour
     public GameObject WinnerSeatEffectObject => _winnerSeatEffectObject;
     [SerializeField] private GameObject _winnerSeatEffectObject;
 
+    public GameObject WinnerSeatTextObject => _winnerSeatTextObject;
+    [SerializeField] private GameObject _winnerSeatTextObject;
+
     [SerializeField] private int _index;
 
     private static Game Game => Game.Instance;
@@ -36,6 +39,7 @@ public class SeatEffectsUI : MonoBehaviour
             }
 
             _winnerSeatEffectObject.SetActive(true);
+            _winnerSeatTextObject.SetActive(true);
             return;
         }
     }
@@ -44,6 +48,7 @@ public class SeatEffectsUI : MonoBehaviour
 
     private void OnStartDeal(GameStage gameStage)
     {
-        WinnerSeatEffectObject.SetActive(false);
+        _winnerSeatEffectObject.SetActive(false);
+        _winnerSeatTextObject.SetActive(false);
     }
 }

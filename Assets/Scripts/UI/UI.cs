@@ -4,10 +4,9 @@ using UnityEngine.UI;
 using Unity.Services.Core;
 using Unity.Services.Lobbies;
 using Unity.Services.Lobbies.Models;
-using Unity.Netcode;
 using static AliScripts.AliExtras;
 
-public class UI : NetworkBehaviour
+public class UI : MonoBehaviour
 {
 
     private async void Start()
@@ -41,7 +40,5 @@ public class UI : NetworkBehaviour
         Game.Instance.isTornumentA = GetBoolFromString(lobby.Data["IsTornumentA"].Value);
 
         LobbyManager.instance.LeaveLobby(() => { }, () => { });
-        
-        Game.Instance.TakeSeatServerRpc();
     }
 }   

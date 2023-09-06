@@ -50,8 +50,10 @@ public class BuyinPannel : NetworkBehaviour
             uint currentStack = player.Stack;
             currentStack += 1000;
             Debug.Log("Player stack: " + currentStack);
-            player.SetStack(currentStack);
 
+            //player.SetStack(currentStack);
+
+            player.SetStackAmountClientRpc(currentStack);
             StopBuyIn();
             buyinPannel.SetActive(false);
         });
@@ -61,13 +63,23 @@ public class BuyinPannel : NetworkBehaviour
         });
     }
 
+    //[ServerRpc]
+    //private void SetStackServerRPC(ulong playerId, uint stack)
+    //{
+    //    if (!IsHost)
+    //        return;
+
+    //    Player player = PlayerSeats.Players.Find(x => x != null && x.OwnerClientId == playerId);
+    //    player.SetStackAmountClientRpc(stack);
+    //}
+
     public void StopBuyIn()
     {
-        buyinBtn.gameObject.SetActive(false);
+        openBuyinPannelBtn.gameObject.SetActive(false);
     }
 
     public void ContinueBuyIn()
     {
-        buyinBtn.gameObject.SetActive(true);
+        openBuyinPannelBtn.gameObject.SetActive(true);
     }
 }

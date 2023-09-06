@@ -58,6 +58,8 @@ public class Game : NetworkBehaviour
     public bool isTornumentA;
     private string playerScore = "";
 
+    private Player localPlayer;
+
     private async void Awake()
     {
         if (Instance == null)
@@ -289,7 +291,6 @@ public class Game : NetworkBehaviour
         yield return new WaitForSeconds(_roundsInterval);
 
         PlayerSeats.SitEveryoneWaiting();
-        PlayerSeats.KickPlayersWithZeroStack();
         
         if (IsServer == false || _startDealWhenСonditionTrueCoroutine != null)
         {
@@ -351,27 +352,40 @@ public class Game : NetworkBehaviour
     }
 
 [ServerRpc(RequireOwnership = false)]
-    public void TakeSeatServerRpc(ServerRpcParams rpcParams = default)
+    public void TakeSeatServerRpc(ulong clientId)
     {
         Debug.Log("Take Seat Server RPC Executed");
         int seatNumber = PlayerSeatsUI.Instance.availableSeatNumber;
-                
-        TakeSeatClientRpc(seatNumber, rpcParams.Receive.SenderClientId);
+    
+        TakeSeatClientRpc(seatNumber, clientId);
         seatNumber++;
         PlayerSeatsUI.Instance.availableSeatNumber = seatNumber;
     }
-    
-    [ClientRpc()]
-    private void TakeSeatClientRpc(int seatNumber, ulong clientId)
-    {
-        Debug.Log("Take Seat Client RPC Executed before if");
-        if (NetworkManager.Singleton.LocalClientId != clientId)
-            return;
-        Debug.Log("Code executed on specific client seat Number found: " + seatNumber);
-        PlayerSeatsUI.Instance.OnPlayerClickTakeButton(seatNumber);
-    }
 
-    [ServerRpc]
+[ClientRpc()]
+public void TakeSeatClientRpc(int seatNumber, ulong clientId)
+{
+    Debug.Log("Take Seat Client RPC Executed before if");
+    if (NetworkManager.Singleton.LocalClientId != clientId)
+        return;
+    Debug.Log("Code executed on specific client seat Number found: " + seatNumber);
+    PlayerSeatsUI.Instance.OnPlayerClickTakeButton(seatNumber);
+    //Player player = FindObjectsOfType<Player>().FirstOrDefault(x => x != null && x.OwnerClientId == clientId);
+    //if (player != null)
+    //{
+    //    Debug.Log("Player found: " + player.ToString());
+    //    player.OnPlayerClickTakeSeatButtonEvent(seatNumber);
+    //}
+    //else
+    //{
+    //    Debug.LogError("Player not found for OwnerClientId: " + clientId);
+    //}
+    //Debug.Log("Player: " + player.NickName + " found before taking seat " + seatNumber);
+
+}
+
+
+[ServerRpc]
     private void SetIsPlayingValueServerRpc(bool value)
     {
         _isPlaying.Value = value;

@@ -3,8 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using Unity.Netcode;
 
-public class PlayerSeats : MonoBehaviour
+public class PlayerSeats : NetworkBehaviour
 {
     public enum DeniedReason
     {
@@ -27,8 +28,13 @@ public class PlayerSeats : MonoBehaviour
     public List<Player> WaitingPlayers => _waitingPlayers.ToList();
     [ReadOnly] [SerializeField] private List<Player> _waitingPlayers;
 
+    public List<Player> JoinedPlayers => _joinedPlayers.ToList();
+    [ReadOnly] [SerializeField] private List<Player> _joinedPlayers;
+
     public Player LocalPlayer => GetLocalPlayer();
-    
+
+    public Player ClientPlayer => GetClientPlayer();
+
     public int PlayersAmount => _players.Count(x => x != null);
 
     [SerializeField] private float _connectionLostCheckInterval;
@@ -46,6 +52,7 @@ public class PlayerSeats : MonoBehaviour
         {
             _players.Add(null);
             _waitingPlayers.Add(null);
+            _joinedPlayers.Add(null);
         }
     }
 
@@ -68,6 +75,18 @@ public class PlayerSeats : MonoBehaviour
         #endif
     }
 
+    public void AddJoinedPlayer(Player player)
+    {
+        for(int i = 0; i < MaxSeats; i++)
+        {
+            if (_joinedPlayers[i] != null)
+                continue;
+
+            _joinedPlayers[i] = player;
+            return;
+        }
+    }
+
     public bool TryTake(Player player, int seatNumber, bool forceToSeat = false)
     {
         if (IsFree(seatNumber) == false)
@@ -80,7 +99,7 @@ public class PlayerSeats : MonoBehaviour
         if (player.Stack < Betting.Instance.BigBlind)
         {
             PlayerSitDeniedEvent?.Invoke(DeniedReason.StackTooSmall, seatNumber);
-            Log.WriteToFile($"Player ({player}) can`t take the №{seatNumber} seat, stack smaller then Big blind.");
+            Log.WriteToFile($"Player ({player.NickName}) can`t take the №{seatNumber} seat, stack smaller then Big blind. its value is: " + player.Stack);
             return false;
         }
 
@@ -181,6 +200,14 @@ public class PlayerSeats : MonoBehaviour
 
         return localPlayer;
     }
+
+    private Player GetClientPlayer()
+    {
+        Player localPlayer = _joinedPlayers.FirstOrDefault(x => x != null && x.IsOwner == true);
+
+        return localPlayer;
+    }
+
 
     // ReSharper disable once UnusedMember.Local
     private IEnumerator CheckForConnectionLost()

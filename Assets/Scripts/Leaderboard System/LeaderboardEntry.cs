@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System.Linq;
 
 public class LeaderboardEntry : MonoBehaviour
 {
@@ -11,7 +12,8 @@ public class LeaderboardEntry : MonoBehaviour
 
     public void UpdateLeaderbordEntry(string Rank, string PlayerName)
     {
-        rankText.text = "#" + Rank;
+        rankText.text = "# " + Rank + 1;
+        string playerName = string.Join("", PlayerName.SkipLast(5));
         playerNameText.text = PlayerName;
     }
 }

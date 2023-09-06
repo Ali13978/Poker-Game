@@ -14,7 +14,10 @@ public class Player : NetworkBehaviour
     [SerializeField] private NetworkVariable<int> _seatNumber = new(NullSeatNumber);
     
     public string NickName => _nickName.Value.ToString();
-    private readonly NetworkVariable<FixedString32Bytes> _nickName = new();
+    [SerializeField] private readonly NetworkVariable<FixedString32Bytes> _nickName = new();
+
+    [SerializeField] private string NameOfPlayer;
+    [SerializeField] private int StackOfPlayer;
 
     public PlayerAvatarData AvatarData => _avatarData.Value;
     private readonly NetworkVariable<PlayerAvatarData> _avatarData = new();
@@ -31,7 +34,7 @@ public class Player : NetworkBehaviour
 
     public NetworkVariable<uint> StackNetworkVariable => _stack;
     public uint Stack => _stack.Value;
-    private readonly NetworkVariable<uint> _stack = new();
+    private NetworkVariable<uint> _stack = new();
 
     public bool IsAvatarImageReady => _isAvatarImageReady.Value;
     private readonly NetworkVariable<bool> _isAvatarImageReady = new();
@@ -43,6 +46,8 @@ public class Player : NetworkBehaviour
     private static Betting Betting => Betting.Instance;
     private static PlayerSeats PlayerSeats => PlayerSeats.Instance;
     private static PlayerSeatsUI PlayerSeatUI => PlayerSeatsUI.Instance;
+
+    private ISaveLoadSystem _saveLoadSystem;
 
     private void OnEnable()
     {
@@ -75,6 +80,8 @@ public class Player : NetworkBehaviour
 
     private void Update()
     {
+        NameOfPlayer = NickName;
+        StackOfPlayer =(int) Stack;
         if (Input.GetKeyDown(KeyCode.Escape) == true && IsOwner == true)
         {
             if (PlayerSeats.Players.Contains(this) == true || PlayerSeats.WaitingPlayers.Contains(this) == true)
@@ -97,10 +104,10 @@ public class Player : NetworkBehaviour
         }
     }
 
-    public void SetStack(uint value)
-    {
-        _stack.Value = value;
-    }
+    //public void SetStack(uint value)
+    //{
+        //_stack.Value = value;
+    //}
 
     public void Leave()
     {
@@ -125,24 +132,36 @@ public class Player : NetworkBehaviour
         }
 
         SetIsImageReadyServerRpc(false);
+        _saveLoadSystem = ReadonlySaveLoadSystemFactory.Instance.Get();
+
+        PlayerData playerData = _saveLoadSystem.Load<PlayerData>();
+        PlayerAvatarData avatarData = _saveLoadSystem.Load<PlayerAvatarData>();
         
-        PlayerData playerData = ReadonlySaveLoadSystemFactory.Instance.Get().Load<PlayerData>();
-        PlayerAvatarData avatarData = ReadonlySaveLoadSystemFactory.Instance.Get().Load<PlayerAvatarData>();
-        
-        try
-        {
+        //try
+        //{
             SetPlayerDataServerRpc(playerData);
             StartCoroutine(SetAvatar(avatarData.CodedValue));
-        }
-        catch
-        {
-            playerData.SetDefaultValues();
-            avatarData.SetDefaultValues();
-            SetPlayerDataServerRpc(playerData);
-            StartCoroutine(SetAvatar(avatarData.CodedValue));
-        }
+        
+        //}
+        //catch
+        //{
+        //    playerData.SetDefaultValues();
+        //    avatarData.SetDefaultValues();
+        //    SetPlayerDataServerRpc(playerData);
+        //    StartCoroutine(SetAvatar(avatarData.CodedValue));
+        //}
+        Debug.Log("Player Spawned");
+        Debug.Log("My Owner id: " + OwnerClientId);
+        StartCoroutine(TakeSeatCoroutine());
     }
-    
+
+    private IEnumerator TakeSeatCoroutine()
+    {
+        yield return new WaitForSeconds(1f);
+        PlayerSeats.Instance.AddJoinedPlayer(this);
+        Game.Instance.TakeSeatServerRpc(OwnerClientId);
+    }
+
     public void SetBetAction(BetAction betAction)
     {
         if (IsOwner == false)
@@ -203,7 +222,7 @@ public class Player : NetworkBehaviour
     }
     
     // Set data to owner.
-    private void OnPlayerClickTakeSeatButtonEvent(int seatNumber)
+    public void OnPlayerClickTakeSeatButtonEvent(int seatNumber)
     {
         if (IsOwner == false)
         {
@@ -346,10 +365,12 @@ public class Player : NetworkBehaviour
     }
 
     [ServerRpc]
-    private void SetPlayerDataServerRpc(PlayerData data)
-    {            
-        _nickName.Value = data.NickName;
-        _stack.Value = data.Stack;
+    private void SetPlayerDataServerRpc(PlayerData playerData)
+    {
+        Debug.Log("Server setting up player data; Name: " + playerData.NickName + "; Stack" + playerData.Stack.ToString());
+
+        _nickName.Value = playerData.NickName;
+        _stack.Value = playerData.Stack;
     }
 
     [ServerRpc]
@@ -386,7 +407,7 @@ public class Player : NetworkBehaviour
     }
     
     [ClientRpc]
-    private void SetStackAmountClientRpc(uint value)
+    public void SetStackAmountClientRpc(uint value)
     {
         if (IsServer == false)
         {
@@ -417,6 +438,6 @@ public class Player : NetworkBehaviour
 
         Shutdown();
     }
-    
+
     #endregion
 }
