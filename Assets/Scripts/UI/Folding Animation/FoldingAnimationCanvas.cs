@@ -20,8 +20,8 @@ public class FoldingAnimationCanvas : MonoBehaviour
 
     public void EnableFoldingCardCanvas(Sprite cardOne, Sprite cardTwo)
     {
-        cardOneImage.sprite = cardOne;
-        cardTwoImage.sprite = cardTwo;
+        cardTwoImage.sprite = cardOne;
+        cardOneImage.sprite = cardTwo;
         gameObject.SetActive(true);
     }
 }
