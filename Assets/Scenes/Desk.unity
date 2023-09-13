@@ -1126,23 +1126,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 192531319}
   m_CullTransparentMesh: 1
---- !u!1 &270384548 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 6836632855715279050, guid: 5996e9c2b6e8f4f408df137f4890b8c8, type: 3}
-  m_PrefabInstance: {fileID: 2059744079}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &270384553
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 270384548}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7c493c041ef64604282291ac4ff202ee, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1001 &295071625
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1254,23 +1237,6 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 8240944438110872506, guid: 1963f77a25ebf044b9f387bcfdf57034, type: 3}
   m_PrefabInstance: {fileID: 1523996439}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &323622154 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 8841859678972587397, guid: 5996e9c2b6e8f4f408df137f4890b8c8, type: 3}
-  m_PrefabInstance: {fileID: 2059744079}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &323622159
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 323622154}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7c493c041ef64604282291ac4ff202ee, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1001 &326407040
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -9252,17 +9218,9 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 93152407295878163, guid: 5996e9c2b6e8f4f408df137f4890b8c8, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 51.83374
-      objectReference: {fileID: 0}
     - target: {fileID: 2728858720170667750, guid: 5996e9c2b6e8f4f408df137f4890b8c8, type: 3}
       propertyPath: m_Name
       value: Folding Animation Canvas
-      objectReference: {fileID: 0}
-    - target: {fileID: 2728858720170667750, guid: 5996e9c2b6e8f4f408df137f4890b8c8, type: 3}
-      propertyPath: m_IsActive
-      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3206238552575405606, guid: 5996e9c2b6e8f4f408df137f4890b8c8, type: 3}
       propertyPath: m_Pivot.x
@@ -9344,28 +9302,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 3396775566299841193, guid: 5996e9c2b6e8f4f408df137f4890b8c8, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: -51.83371
-      objectReference: {fileID: 0}
-    - target: {fileID: 3402470881366013447, guid: 5996e9c2b6e8f4f408df137f4890b8c8, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 51.83371
-      objectReference: {fileID: 0}
-    - target: {fileID: 6303186683194064641, guid: 5996e9c2b6e8f4f408df137f4890b8c8, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: -51.83374
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 6836632855715279050, guid: 5996e9c2b6e8f4f408df137f4890b8c8, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 270384553}
-    - targetCorrespondingSourceObject: {fileID: 8841859678972587397, guid: 5996e9c2b6e8f4f408df137f4890b8c8, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 323622159}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 5996e9c2b6e8f4f408df137f4890b8c8, type: 3}
 --- !u!1 &2127442735
 GameObject:
